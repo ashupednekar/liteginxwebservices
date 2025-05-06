@@ -1,4 +1,3 @@
--- Create users table
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
@@ -6,10 +5,10 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create magic_links table
 CREATE TABLE magic_links (
     id SERIAL PRIMARY KEY,
     user_id INT REFERENCES users(id),
+    code VARCHAR(6) NOT NULL,
     token VARCHAR(255) NOT NULL UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     expires_at TIMESTAMP

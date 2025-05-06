@@ -8,6 +8,7 @@ pub struct Settings {
     pub listen_port: String,
     pub database_url: String,
     pub database_schema: String,
+    pub database_pool_max_connections: u32,
     //otel
     //pub otlp_host: Option<String>,
     //pub otlp_port: Option<String>,
