@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use crate::prelude::Result;
+use crate::{pkg::server::listen, prelude::Result};
 
 mod migrate;
 
@@ -20,7 +20,7 @@ pub async fn run() -> Result<()> {
     let args = Cmd::parse();
     match args.command{
         Some(SubCommandType::Listen) => {
-
+            listen().await?;
         },
         Some(SubCommandType::Migrate) => {
             migrate::apply().await?;
