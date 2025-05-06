@@ -1,3 +1,2 @@
-pub mod users;
 pub mod email;
-
+pub mod users;

@@ -1,13 +1,9 @@
-use std::sync::Arc;
 use sqlx::PgPool;
+use std::sync::Arc;
 
+use sqlx::{Pool, Postgres, postgres::PgPoolOptions};
 
-
-use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
-
-use crate::{prelude::Result, conf::settings};
-
-
+use crate::{conf::settings, prelude::Result};
 
 pub fn db_pool() -> Result<Pool<Postgres>> {
     let pool = PgPoolOptions::new()
@@ -17,12 +13,14 @@ pub fn db_pool() -> Result<Pool<Postgres>> {
 }
 
 #[derive(Debug, Clone)]
-pub struct AppState{
-    pub db_pool: Arc<PgPool>
+pub struct AppState {
+    pub db_pool: Arc<PgPool>,
 }
 
-impl AppState{
-    pub async fn new() -> Result<AppState>{
-        Ok(AppState { db_pool: Arc::new(db_pool()?) })
+impl AppState {
+    pub async fn new() -> Result<AppState> {
+        Ok(AppState {
+            db_pool: Arc::new(db_pool()?),
+        })
     }
 }

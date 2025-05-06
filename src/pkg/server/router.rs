@@ -1,20 +1,19 @@
 use axum::middleware::from_fn_with_state;
-use axum::{
-    routing::get,
-    Router,
-};
+use axum::{Router, routing::get};
 
-use crate::prelude::Result;
 use super::handlers::probes::{healthz, livez};
 use super::middlewares;
 use super::state::AppState;
-
+use crate::prelude::Result;
 
 pub async fn build_routes() -> Result<Router> {
     let state = AppState::new().await?;
     Ok(Router::new()
-        .route("/livez/", get(livez))
         .route("/healthz/", get(healthz))
-        .layer(from_fn_with_state(state.clone(), middlewares::authn::authenticate))
+        .layer(from_fn_with_state(
+            state.clone(),
+            middlewares::authn::authenticate,
+        ))
+        .route("/livez/", get(livez))
         .with_state(state))
 }

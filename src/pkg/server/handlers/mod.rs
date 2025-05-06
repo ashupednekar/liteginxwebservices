@@ -1,2 +1,2 @@
-pub mod probes;
 pub mod auth;
+pub mod probes;

@@ -9,9 +9,7 @@ pub async fn livez() -> Result<()> {
 }
 
 pub async fn healthz(State(state): State<AppState>) -> Result<()> {
-    query("select 1")
-        .execute(&*state.db_pool)
-        .await?;
+    query("select 1").execute(&*state.db_pool).await?;
     tracing::debug!("service is healthy");
     Ok(())
 }

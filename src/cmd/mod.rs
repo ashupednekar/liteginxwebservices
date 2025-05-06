@@ -1,27 +1,27 @@
-use clap::{Parser, Subcommand};
 use crate::{pkg::server::listen, prelude::Result};
+use clap::{Parser, Subcommand};
 
 mod migrate;
 
 #[derive(Parser)]
 #[command(about = "starts lite web services")]
-struct Cmd{
+struct Cmd {
     #[command(subcommand)]
-    command: Option<SubCommandType>
+    command: Option<SubCommandType>,
 }
 
 #[derive(Subcommand)]
-enum SubCommandType{
+enum SubCommandType {
     Listen,
-    Migrate
+    Migrate,
 }
 
 pub async fn run() -> Result<()> {
     let args = Cmd::parse();
-    match args.command{
+    match args.command {
         Some(SubCommandType::Listen) => {
             listen().await?;
-        },
+        }
         Some(SubCommandType::Migrate) => {
             migrate::apply().await?;
         }

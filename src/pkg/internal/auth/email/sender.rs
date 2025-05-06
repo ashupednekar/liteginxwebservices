@@ -2,9 +2,9 @@ use lettre::message::header::ContentType;
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::{Message, SmtpTransport, Transport};
 
-use crate::{prelude::Result, conf::settings};
+use crate::{conf::settings, prelude::Result};
 
-pub trait SendEmail{
+pub trait SendEmail {
     fn send(&self, email: &str) -> Result<()>;
 }
 
@@ -18,7 +18,11 @@ pub fn send_email(name: &str, email: &str, subject: &str, body: &str, is_html: b
     };
 
     let email = Message::builder()
-        .from(format!("{} <{}>", &settings.service_name, &settings.from_email).parse().unwrap())
+        .from(
+            format!("{} <{}>", &settings.service_name, &settings.from_email)
+                .parse()
+                .unwrap(),
+        )
         .to(format!("{} <{}>", &name, &email).parse().unwrap())
         .subject(subject)
         .header(content_type)
@@ -39,5 +43,3 @@ pub fn send_email(name: &str, email: &str, subject: &str, body: &str, is_html: b
 
     Ok(())
 }
-
-

@@ -2,16 +2,14 @@ use std::fmt::{self, Display};
 
 use crate::conf::settings;
 
-use super::sender::{send_email, SendEmail};
+use super::sender::{SendEmail, send_email};
 
-
-pub struct RegistrationTemplate<'a>{
+pub struct RegistrationTemplate<'a> {
     pub name: &'a str,
     pub username: &'a str,
     pub subject: &'a str,
-    pub link: &'a str 
+    pub link: &'a str,
 }
-
 
 impl<'a> Display for RegistrationTemplate<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -63,31 +61,36 @@ impl<'a> Display for RegistrationTemplate<'a> {
     }
 }
 
-
-impl<'a> SendEmail for RegistrationTemplate<'a>{
+impl<'a> SendEmail for RegistrationTemplate<'a> {
     fn send(&self, email: &str) -> crate::prelude::Result<()> {
-        send_email(&self.name, email, &self.subject, &format!("{}", &self), true)?;
+        send_email(
+            &self.name,
+            email,
+            &self.subject,
+            &format!("{}", &self),
+            true,
+        )?;
         Ok(())
     }
 }
 
-
 #[cfg(test)]
-pub mod tests{
+pub mod tests {
     use tracing_test::traced_test;
 
-    use crate::prelude::Result;
     use super::*;
+    use crate::prelude::Result;
 
     #[test]
     #[traced_test]
-    fn test_send_mail_template() -> Result<()>{
-        RegistrationTemplate{
+    fn test_send_mail_template() -> Result<()> {
+        RegistrationTemplate {
             name: "Ashu Pednekar",
             username: "ashupednekar",
             subject: "Welcome",
-            link: "https://google.com"
-        }.send("ashupednekar49@gmail.com")?;
+            link: "https://google.com",
+        }
+        .send("ashupednekar49@gmail.com")?;
         Ok(())
     }
 }
