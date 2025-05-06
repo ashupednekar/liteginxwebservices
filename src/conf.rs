@@ -6,7 +6,8 @@ use serde::Deserialize;
 pub struct Settings {
     pub service_name: String,
     pub listen_port: String,
-    //pub database_url: String,
+    pub database_url: String,
+    pub database_schema: String,
     //otel
     //pub otlp_host: Option<String>,
     //pub otlp_port: Option<String>,

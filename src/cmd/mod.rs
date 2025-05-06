@@ -1,6 +1,8 @@
 use clap::{Parser, Subcommand};
 use crate::prelude::Result;
 
+mod migrate;
+
 #[derive(Parser)]
 #[command(about = "starts lite web services")]
 struct Cmd{
@@ -11,6 +13,7 @@ struct Cmd{
 #[derive(Subcommand)]
 enum SubCommandType{
     Listen,
+    Migrate
 }
 
 pub async fn run() -> Result<()> {
@@ -19,6 +22,9 @@ pub async fn run() -> Result<()> {
         Some(SubCommandType::Listen) => {
 
         },
+        Some(SubCommandType::Migrate) => {
+            migrate::apply().await?;
+        }
         None => {
             tracing::error!("no subcommand passed");
         }

@@ -26,3 +26,6 @@ chrono = { version = "0.4.39", features = ["serde"] }
 uuid = { version = "1.12.1", features = ["v4"] }
 humantime = "2.1.0"
 lettre = "0.11.15"
+
+[dev-dependencies]
+sqlx-cli = "0.8.3"
