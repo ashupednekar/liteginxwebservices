@@ -2,14 +2,15 @@ use config::{Config, ConfigError, Environment};
 use lazy_static::lazy_static;
 use serde::Deserialize;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct Settings {
+    pub service_name: String,
     pub listen_port: String,
-    pub database_url: String,
+    //pub database_url: String,
     //otel
-    pub otlp_host: Option<String>,
-    pub otlp_port: Option<String>,
-    pub use_telemetry: bool,
+    //pub otlp_host: Option<String>,
+    //pub otlp_port: Option<String>,
+    //pub use_telemetry: bool,
     //email
     pub from_email: String,
     pub smtp_user: String,
