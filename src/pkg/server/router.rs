@@ -9,11 +9,18 @@ use crate::prelude::Result;
 pub async fn build_routes() -> Result<Router> {
     let state = AppState::new().await?;
     Ok(Router::new()
-        .route("/healthz/", get(healthz))
+        //home
+        //containers
+        //functions
+        //repositories
+        //endpoints
+        //buckets
+        //metrics
         .layer(from_fn_with_state(
             state.clone(),
             middlewares::authn::authenticate,
         ))
+        .route("/healthz/", get(healthz))
         .route("/livez/", get(livez))
         .with_state(state))
 }

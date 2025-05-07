@@ -1,7 +1,9 @@
 pub mod handlers;
+pub mod templates;
 pub mod middlewares;
 pub mod router;
 pub mod state;
+
 use crate::{conf::settings, prelude::Result};
 use router::build_routes;
 
