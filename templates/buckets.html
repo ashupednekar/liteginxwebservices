@@ -1,6 +1,4 @@
-
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -30,82 +28,7 @@
 <body class="bg-gray-50 text-gray-800 min-h-screen">
   <div x-data="appState()" class="flex flex-col min-h-screen">
     <!-- Header -->
-    <header class="bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-md">
-      <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-        <div class="flex items-center space-x-2">
-          <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M21 9V15C21 18.3137 18.3137 21 15 21H9C5.68629 21 3 18.3137 3 15V9C3 5.68629 5.68629 3 9 3H15C18.3137 3 21 5.68629 21 9Z" stroke="currentColor" stroke-width="2"/>
-            <path d="M7 9.5H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            <path d="M7 14.5H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-          <h1 class="text-xl font-bold">Lite Web Services</h1>
-        </div>
-        <div class="flex items-center space-x-4">
-          <button @click="showNotifications = !showNotifications" class="relative p-1 rounded-full hover:bg-teal-600 transition-colors">
-            <i class="fas fa-bell"></i>
-            <span x-show="notifications.length > 0" class="absolute top-0 right-0 h-4 w-4 bg-red-500 rounded-full flex items-center justify-center text-xs" x-text="notifications.length"></span>
-          </button>
-          <div x-show="showNotifications" @click.away="showNotifications = false" x-cloak class="absolute right-4 mt-12 w-80 bg-white rounded-lg shadow-xl z-50 fade-enter">
-            <div class="p-3 border-b border-gray-200">
-              <h3 class="font-medium">Notifications</h3>
-            </div>
-            <div class="max-h-64 overflow-y-auto">
-              <template x-for="notification in notifications" :key="notification.id">
-                <div class="p-3 border-b border-gray-100 hover:bg-gray-50">
-                  <div class="flex items-start">
-                    <div x-show="notification.type === 'success'" class="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-500">
-                      <i class="fas fa-check"></i>
-                    </div>
-                    <div x-show="notification.type === 'error'" class="flex-shrink-0 w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-500">
-                      <i class="fas fa-exclamation"></i>
-                    </div>
-                    <div x-show="notification.type === 'info'" class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-500">
-                      <i class="fas fa-info"></i>
-                    </div>
-                    <div class="ml-3 flex-1">
-                      <p class="text-sm font-medium" x-text="notification.title"></p>
-                      <p class="text-xs text-gray-500 mt-1" x-text="notification.message"></p>
-                      <p class="text-xs text-gray-400 mt-1" x-text="notification.time"></p>
-                    </div>
-                  </div>
-                </div>
-              </template>
-              <div x-show="notifications.length === 0" class="p-4 text-center text-gray-500">
-                No notifications
-              </div>
-            </div>
-          </div>
-          <button class="bg-white text-teal-600 px-3 py-1 rounded-md hover:bg-teal-50 transition-colors">
-            <i class="fas fa-user mr-1"></i> Account
-          </button>
-        </div>
-      </div>
-    </header>
-
-    <!-- Navigation -->
-    <nav class="bg-white shadow-sm">
-      <div class="container mx-auto px-4">
-        <div class="flex space-x-1">
-          <a href="home.html" class="px-3 py-4 text-gray-700 hover:text-teal-600 border-b-2 border-transparent hover:border-teal-500 font-medium">
-            <i class="fas fa-home mr-1"></i> Home
-          </a>
-          <a href="container.html" class="px-3 py-4 text-gray-700 hover:text-teal-600 border-b-2 border-transparent hover:border-teal-500 font-medium">
-            <i class="fas fa-cubes mr-1"></i> Containers
-          </a>
-          <a href="functions.html" class="px-3 py-4 text-gray-700 hover:text-teal-600 border-b-2 border-transparent hover:border-teal-500 font-medium">
-            <i class="fas fa-bolt mr-1"></i> Functions
-          </a>
-          <a href="objects.html" class="px-3 py-4 text-blue-600 border-b-2 border-blue-500 font-medium">
-            <i class="fas fa-database mr-1"></i> Objects
-          </a>
-          <a href="settings.html" class="px-3 py-4 text-gray-700 hover:text-teal-600 border-b-2 border-transparent hover:border-teal-500 font-medium">
-            <i class="fas fa-cog mr-1"></i> Settings
-          </a>
-        </div>
-      </div>
-    </nav>
-
-    <!-- Main Content -->
+        <!-- Main Content -->
     <main class="flex-grow container mx-auto px-4 py-6">
       <!-- View Selector -->
       <div class="flex space-x-2 mb-6">
@@ -569,36 +492,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Footer -->
-    <footer class="bg-white border-t border-gray-200 py-6">
-      <div class="container mx-auto px-4">
-        <div class="flex flex-col md:flex-row justify-between items-center">
-          <div class="flex items-center space-x-2 mb-4 md:mb-0">
-            <svg class="h-6 w-6 text-teal-600" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M21 9V15C21 18.3137 18.3137 21 15 21H9C5.68629 21 3 18.3137 3 15V9C3 5.68629 5.68629 3 9 3H15C18.3137 3 21 5.68629 21 9Z" stroke="currentColor" stroke-width="2"/>
-              <path d="M7 9.5H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              <path d="M7 14.5H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-            <span class="text-gray-600">Lite Web Services</span>
-          </div>
-          <div class="flex space-x-4">
-            <a href="#" class="text-gray-500 hover:text-teal-600">
-              <i class="fab fa-github"></i>
-            </a>
-            <a href="#" class="text-gray-500 hover:text-teal-600">
-              <i class="fab fa-twitter"></i>
-            </a>
-            <a href="#" class="text-gray-500 hover:text-teal-600">
-              <i class="fab fa-linkedin"></i>
-            </a>
-          </div>
-          <div class="mt-4 md:mt-0 text-sm text-gray-500">
-            &copy; 2023 Lite Web Services. All rights reserved.
-          </div>
-        </div>
-      </div>
-    </footer>
   </div>
 
   <script>
@@ -735,4 +628,4 @@
     }
   </script>
 </body>
-</html>
+<>
