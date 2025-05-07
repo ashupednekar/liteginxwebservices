@@ -1,0 +1,423 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lite Web Services - Home</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://unpkg.com/htmx.org@1.9.6"></script>
+  <script src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js" defer></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    [x-cloak] { display: none !important; }
+    .slide-enter { 
+      animation: slide-in 0.3s ease-out;
+    }
+    @keyframes slide-in {
+      0% { transform: translateY(10px); opacity: 0; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
+    .fade-enter {
+      animation: fade-in 0.2s ease-out;
+    }
+    @keyframes fade-in {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen">
+  <div x-data="appState()" class="flex flex-col min-h-screen">
+    <!-- Fixed Top Bar -->
+    <header class="bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-md fixed top-0 left-0 right-0 z-10">
+      <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+        <div class="flex items-center space-x-4">
+          <div class="flex items-center space-x-2">
+            <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M21 9V15C21 18.3137 18.3137 21 15 21H9C5.68629 21 3 18.3137 3 15V9C3 5.68629 5.68629 3 9 3H15C18.3137 3 21 5.68629 21 9Z" stroke="currentColor" stroke-width="2"/>
+              <path d="M7 9.5H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M7 14.5H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <h1 class="text-xl font-bold">Lite Web Services</h1>
+          </div>
+          
+          <!-- Project Selection Dropdown -->
+          <div class="relative" x-data="{ open: false }">
+            <button @click="open = !open" class="flex items-center space-x-2 bg-teal-600 hover:bg-teal-700 px-3 py-1 rounded-md transition-colors">
+              <span x-text="currentProject.name">Default Project</span>
+              <i class="fas fa-chevron-down text-xs"></i>
+            </button>
+            <div x-show="open" @click.away="open = false" x-cloak class="absolute left-0 mt-2 w-56 bg-white rounded-md shadow-lg z-20">
+              <div class="py-1">
+                <template x-for="project in projects" :key="project.id">
+                  <a href="#" @click.prevent="selectProject(project); open = false" class="block px-4 py-2 text-gray-800 hover:bg-teal-50 hover:text-teal-600" x-text="project.name"></a>
+                </template>
+                <div class="border-t border-gray-100 mt-1 pt-1">
+                  <a href="#" @click.prevent="showNewProjectModal = true; open = false" class="block px-4 py-2 text-teal-600 hover:bg-teal-50">
+                    <i class="fas fa-plus mr-2"></i>New Project
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="flex items-center space-x-4">
+          <button @click="showNotifications = !showNotifications" class="relative p-1 rounded-full hover:bg-teal-600 transition-colors">
+            <i class="fas fa-bell"></i>
+            <span x-show="notifications.length > 0" class="absolute top-0 right-0 h-4 w-4 bg-red-500 rounded-full flex items-center justify-center text-xs" x-text="notifications.length"></span>
+          </button>
+          <div x-show="showNotifications" @click.away="showNotifications = false" x-cloak class="absolute right-4 mt-8 w-80 bg-white rounded-lg shadow-xl z-50 fade-enter">
+            <div class="p-3 border-b border-gray-200">
+              <h3 class="font-medium">Notifications</h3>
+            </div>
+            <div class="max-h-64 overflow-y-auto">
+              <template x-for="notification in notifications" :key="notification.id">
+                <div class="p-3 border-b border-gray-100 hover:bg-gray-50">
+                  <div class="flex items-start">
+                    <div x-show="notification.type === 'success'" class="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-500">
+                      <i class="fas fa-check"></i>
+                    </div>
+                    <div x-show="notification.type === 'error'" class="flex-shrink-0 w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-500">
+                      <i class="fas fa-exclamation"></i>
+                    </div>
+                    <div x-show="notification.type === 'info'" class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-500">
+                      <i class="fas fa-info"></i>
+                    </div>
+                    <div class="ml-3 flex-1">
+                      <p class="text-sm font-medium" x-text="notification.title"></p>
+                      <p class="text-xs text-gray-500 mt-1" x-text="notification.message"></p>
+                      <p class="text-xs text-gray-400 mt-1" x-text="notification.time"></p>
+                    </div>
+                  </div>
+                </div>
+              </template>
+              <div x-show="notifications.length === 0" class="p-4 text-center text-gray-500">
+                No notifications
+              </div>
+            </div>
+          </div>
+          <button class="bg-white text-teal-600 px-3 py-1 rounded-md hover:bg-teal-50 transition-colors">
+            <i class="fas fa-user mr-1"></i> Account
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm fixed top-16 left-0 right-0 z-10">
+      <div class="container mx-auto px-4">
+        <div class="flex space-x-1">
+          <a href="/" class="px-3 py-4 text-teal-600 border-b-2 border-teal-500 font-medium">
+            <i class="fas fa-home mr-1"></i> Home
+          </a>
+          <a href="/containers" hx-get="/containers" hx-push-url="true" hx-target="#main-content" class="px-3 py-4 text-gray-700 hover:text-teal-600 border-b-2 border-transparent hover:border-teal-500 font-medium">
+            <i class="fas fa-cubes mr-1"></i> Containers
+          </a>
+          <a href="/functions" hx-get="/functions" hx-push-url="true" hx-target="#main-content" class="px-3 py-4 text-gray-700 hover:text-teal-600 border-b-2 border-transparent hover:border-teal-500 font-medium">
+            <i class="fas fa-bolt mr-1"></i> Functions
+          </a>
+          <a href="/buckets" hx-get="/buckets" hx-push-url="true" hx-target="#main-content" class="px-3 py-4 text-gray-700 hover:text-teal-600 border-b-2 border-transparent hover:border-teal-500 font-medium">
+            <i class="fas fa-database mr-1"></i> Buckets
+          </a>
+          <a href="/settings" hx-get="/settings" hx-push-url="true" hx-target="#main-content" class="px-3 py-4 text-gray-700 hover:text-teal-600 border-b-2 border-transparent hover:border-teal-500 font-medium">
+            <i class="fas fa-cog mr-1"></i> Settings
+          </a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content with padding for fixed header -->
+    <main id="main-content" class="flex-grow container mx-auto px-4 pt-32 pb-6">
+      <!-- Hero Section -->
+      <div class="bg-gradient-to-r from-teal-500 to-teal-600 rounded-lg shadow-md p-8 mb-6 text-white">
+        <div class="max-w-3xl">
+          <h1 class="text-3xl font-bold mb-4">Deploy your applications with ease</h1>
+          <p class="text-xl mb-6">Lite Web Services provides a simple, fast, and reliable platform for deploying your containers, functions, and storing your objects.</p>
+          <div class="flex flex-wrap gap-3">
+            <a href="/containers" hx-get="/containers" hx-push-url="true" hx-target="#main-content" class="bg-white text-teal-600 px-6 py-2 rounded-md font-medium hover:bg-teal-50 transition-colors">
+              <i class="fas fa-cubes mr-2"></i>Deploy Container
+            </a>
+            <a href="/functions" hx-get="/functions" hx-push-url="true" hx-target="#main-content" class="bg-teal-700 text-white px-6 py-2 rounded-md font-medium hover:bg-teal-800 transition-colors">
+              <i class="fas fa-bolt mr-2"></i>Create Function
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Services Overview -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <!-- Containers Card -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+          <div class="p-6">
+            <div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center text-teal-600 mb-4">
+              <i class="fas fa-cubes text-xl"></i>
+            </div>
+            <h3 class="text-lg font-medium mb-2">Containers</h3>
+            <p class="text-gray-600 mb-4">Deploy containers from any registry with just a few clicks. We handle the infrastructure, you focus on your applications.</p>
+            <a href="/containers" hx-get="/containers" hx-push-url="true" hx-target="#main-content" class="text-teal-600 hover:text-teal-800 font-medium">
+              Manage Containers <i class="fas fa-arrow-right ml-1"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- Functions Card -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+          <div class="p-6">
+            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600 mb-4">
+              <i class="fas fa-bolt text-xl"></i>
+            </div>
+            <h3 class="text-lg font-medium mb-2">Functions</h3>
+            <p class="text-gray-600 mb-4">Write code that responds to events without managing servers. Perfect for APIs, webhooks, and data processing.</p>
+            <a href="/functions" hx-get="/functions" hx-push-url="true" hx-target="#main-content" class="text-purple-600 hover:text-purple-800 font-medium">
+              Manage Functions <i class="fas fa-arrow-right ml-1"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- Objects Card -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+          <div class="p-6">
+            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mb-4">
+              <i class="fas fa-database text-xl"></i>
+            </div>
+            <h3 class="text-lg font-medium mb-2">Buckets</h3>
+            <p class="text-gray-600 mb-4">Store and serve files of any size. Perfect for images, videos, backups, and any other type of file your application needs.</p>
+            <a href="/buckets" hx-get="/buckets" hx-push-url="true" hx-target="#main-content" class="text-blue-600 hover:text-blue-800 font-medium">
+              Manage Buckets <i class="fas fa-arrow-right ml-1"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h2 class="text-lg font-medium mb-4">Recent Activity</h2>
+        <div class="space-y-4">
+          <div class="flex items-start">
+            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-500">
+              <i class="fas fa-check"></i>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm font-medium">Container Deployed</p>
+              <p class="text-xs text-gray-500">nginx-web was successfully deployed</p>
+              <p class="text-xs text-gray-400">2 minutes ago</p>
+            </div>
+          </div>
+          <div class="flex items-start">
+            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-500">
+              <i class="fas fa-exclamation"></i>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm font-medium">Deployment Failed</p>
+              <p class="text-xs text-gray-500">Failed to deploy api-service</p>
+              <p class="text-xs text-gray-400">10 minutes ago</p>
+            </div>
+          </div>
+          <div class="flex items-start">
+            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-500">
+              <i class="fas fa-info"></i>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm font-medium">Registry Added</p>
+              <p class="text-xs text-gray-500">Private registry was added successfully</p>
+              <p class="text-xs text-gray-400">1 hour ago</p>
+            </div>
+          </div>
+        </div>
+        <div class="mt-4 text-center">
+          <a href="#" class="text-sm text-teal-600 hover:text-teal-800 font-medium">View All Activity</a>
+        </div>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-lg shadow-md p-4">
+          <div class="flex items-center">
+            <div class="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center text-teal-600 mr-3">
+              <i class="fas fa-cubes"></i>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">Active Containers</p>
+              <p class="text-xl font-bold">2</p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-4">
+          <div class="flex items-center">
+            <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 mr-3">
+              <i class="fas fa-bolt"></i>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">Active Functions</p>
+              <p class="text-xl font-bold">5</p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-4">
+          <div class="flex items-center">
+            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-3">
+              <i class="fas fa-database"></i>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">Buckets</p>
+              <p class="text-xl font-bold">3</p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-4">
+          <div class="flex items-center">
+            <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600 mr-3">
+              <i class="fas fa-clock"></i>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">Uptime</p>
+              <p class="text-xl font-bold">99.9%</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 py-6">
+      <div class="container mx-auto px-4">
+        <div class="flex flex-col md:flex-row justify-between items-center">
+          <div class="flex items-center space-x-2 mb-4 md:mb-0">
+            <svg class="h-6 w-6 text-teal-600" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M21 9V15C21 18.3137 18.3137 21 15 21H9C5.68629 21 3 18.3137 3 15V9C3 5.68629 5.68629 3 9 3H15C18.3137 3 21 5.68629 21 9Z" stroke="currentColor" stroke-width="2"/>
+              <path d="M7 9.5H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M7 14.5H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span class="text-gray-600">Lite Web Services</span>
+          </div>
+          <div class="flex space-x-4">
+            <a href="#" class="text-gray-500 hover:text-teal-600">
+              <i class="fab fa-github"></i>
+            </a>
+            <a href="#" class="text-gray-500 hover:text-teal-600">
+              <i class="fab fa-twitter"></i>
+            </a>
+            <a href="#" class="text-gray-500 hover:text-teal-600">
+              <i class="fab fa-linkedin"></i>
+            </a>
+          </div>
+          <div class="mt-4 md:mt-0 text-sm text-gray-500">
+            &copy; 2023 Lite Web Services. All rights reserved.
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- New Project Modal -->
+    <div x-show="showNewProjectModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 fade-enter" x-cloak>
+      <div @click.away="showNewProjectModal = false" class="bg-white rounded-lg shadow-xl max-w-md w-full">
+        <div class="flex justify-between items-center border-b border-gray-200 px-6 py-4">
+          <h3 class="text-lg font-medium">Create New Project</h3>
+          <button @click="showNewProjectModal = false" class="text-gray-400 hover:text-gray-600">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="p-6">
+          <form @submit.prevent="createProject">
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Project Name</label>
+                <input x-model="newProject.name" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500" placeholder="My Awesome Project">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>
+                <textarea x-model="newProject.description" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500" rows="3" placeholder="Brief description of your project"></textarea>
+              </div>
+            </div>
+            
+            <div class="mt-6 flex justify-end space-x-3">
+              <button type="button" @click="showNewProjectModal = false" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
+                Cancel
+              </button>
+              <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
+                Create Project
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function appState() {
+      return {
+        showNotifications: false,
+        showNewProjectModal: false,
+        notifications: [
+          {
+            id: 1,
+            type: 'success',
+            title: 'Container Deployed',
+            message: 'nginx-web was successfully deployed',
+            time: '2 minutes ago'
+          },
+          {
+            id: 2,
+            type: 'error',
+            title: 'Deployment Failed',
+            message: 'Failed to deploy api-service',
+            time: '10 minutes ago'
+          },
+          {
+            id: 3,
+            type: 'info',
+            title: 'Registry Added',
+            message: 'Private registry was added successfully',
+            time: '1 hour ago'
+          }
+        ],
+        projects: [
+          { id: 1, name: 'Default Project' },
+          { id: 2, name: 'E-commerce API' },
+          { id: 3, name: 'Analytics Dashboard' }
+        ],
+        currentProject: { id: 1, name: 'Default Project' },
+        newProject: {
+          name: '',
+          description: ''
+        },
+        selectProject(project) {
+          this.currentProject = project;
+        },
+        createProject() {
+          if (this.newProject.name.trim() === '') return;
+          
+          const id = this.projects.length + 1;
+          const project = {
+            id,
+            name: this.newProject.name
+          };
+          
+          this.projects.push(project);
+          this.currentProject = project;
+          this.showNewProjectModal = false;
+          
+          // Reset form
+          this.newProject = {
+            name: '',
+            description: ''
+          };
+          
+          // Add notification
+          this.notifications.unshift({
+            id: Date.now(),
+            type: 'success',
+            title: 'Project Created',
+            message: `${project.name} has been created`,
+            time: 'Just now'
+          });
+        }
+      };
+    }
+  </script>
+</body>
+</html>

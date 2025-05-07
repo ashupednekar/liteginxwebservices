@@ -1,0 +1,738 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lite Web Services - Objects</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://unpkg.com/htmx.org@1.9.6"></script>
+  <script src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js" defer></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    [x-cloak] { display: none !important; }
+    .slide-enter { 
+      animation: slide-in 0.3s ease-out;
+    }
+    @keyframes slide-in {
+      0% { transform: translateY(10px); opacity: 0; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
+    .fade-enter {
+      animation: fade-in 0.2s ease-out;
+    }
+    @keyframes fade-in {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen">
+  <div x-data="appState()" class="flex flex-col min-h-screen">
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-md">
+      <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+          <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M21 9V15C21 18.3137 18.3137 21 15 21H9C5.68629 21 3 18.3137 3 15V9C3 5.68629 5.68629 3 9 3H15C18.3137 3 21 5.68629 21 9Z" stroke="currentColor" stroke-width="2"/>
+            <path d="M7 9.5H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M7 14.5H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <h1 class="text-xl font-bold">Lite Web Services</h1>
+        </div>
+        <div class="flex items-center space-x-4">
+          <button @click="showNotifications = !showNotifications" class="relative p-1 rounded-full hover:bg-teal-600 transition-colors">
+            <i class="fas fa-bell"></i>
+            <span x-show="notifications.length > 0" class="absolute top-0 right-0 h-4 w-4 bg-red-500 rounded-full flex items-center justify-center text-xs" x-text="notifications.length"></span>
+          </button>
+          <div x-show="showNotifications" @click.away="showNotifications = false" x-cloak class="absolute right-4 mt-12 w-80 bg-white rounded-lg shadow-xl z-50 fade-enter">
+            <div class="p-3 border-b border-gray-200">
+              <h3 class="font-medium">Notifications</h3>
+            </div>
+            <div class="max-h-64 overflow-y-auto">
+              <template x-for="notification in notifications" :key="notification.id">
+                <div class="p-3 border-b border-gray-100 hover:bg-gray-50">
+                  <div class="flex items-start">
+                    <div x-show="notification.type === 'success'" class="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-500">
+                      <i class="fas fa-check"></i>
+                    </div>
+                    <div x-show="notification.type === 'error'" class="flex-shrink-0 w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-500">
+                      <i class="fas fa-exclamation"></i>
+                    </div>
+                    <div x-show="notification.type === 'info'" class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-500">
+                      <i class="fas fa-info"></i>
+                    </div>
+                    <div class="ml-3 flex-1">
+                      <p class="text-sm font-medium" x-text="notification.title"></p>
+                      <p class="text-xs text-gray-500 mt-1" x-text="notification.message"></p>
+                      <p class="text-xs text-gray-400 mt-1" x-text="notification.time"></p>
+                    </div>
+                  </div>
+                </div>
+              </template>
+              <div x-show="notifications.length === 0" class="p-4 text-center text-gray-500">
+                No notifications
+              </div>
+            </div>
+          </div>
+          <button class="bg-white text-teal-600 px-3 py-1 rounded-md hover:bg-teal-50 transition-colors">
+            <i class="fas fa-user mr-1"></i> Account
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm">
+      <div class="container mx-auto px-4">
+        <div class="flex space-x-1">
+          <a href="home.html" class="px-3 py-4 text-gray-700 hover:text-teal-600 border-b-2 border-transparent hover:border-teal-500 font-medium">
+            <i class="fas fa-home mr-1"></i> Home
+          </a>
+          <a href="container.html" class="px-3 py-4 text-gray-700 hover:text-teal-600 border-b-2 border-transparent hover:border-teal-500 font-medium">
+            <i class="fas fa-cubes mr-1"></i> Containers
+          </a>
+          <a href="functions.html" class="px-3 py-4 text-gray-700 hover:text-teal-600 border-b-2 border-transparent hover:border-teal-500 font-medium">
+            <i class="fas fa-bolt mr-1"></i> Functions
+          </a>
+          <a href="objects.html" class="px-3 py-4 text-blue-600 border-b-2 border-blue-500 font-medium">
+            <i class="fas fa-database mr-1"></i> Objects
+          </a>
+          <a href="settings.html" class="px-3 py-4 text-gray-700 hover:text-teal-600 border-b-2 border-transparent hover:border-teal-500 font-medium">
+            <i class="fas fa-cog mr-1"></i> Settings
+          </a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow container mx-auto px-4 py-6">
+      <!-- View Selector -->
+      <div class="flex space-x-2 mb-6">
+        <button @click="currentView = 'buckets'" :class="{'bg-blue-600 text-white': currentView === 'buckets', 'bg-white text-gray-700 hover:bg-gray-100': currentView !== 'buckets'}" class="px-4 py-2 rounded-md shadow-sm transition-colors">
+          <i class="fas fa-folder mr-2"></i>My Buckets
+        </button>
+        <button @click="currentView = 'upload'" :class="{'bg-blue-600 text-white': currentView === 'upload', 'bg-white text-gray-700 hover:bg-gray-100': currentView !== 'upload'}" class="px-4 py-2 rounded-md shadow-sm transition-colors">
+          <i class="fas fa-upload mr-2"></i>Upload Objects
+        </button>
+        <button @click="currentView = 'browser'" :class="{'bg-blue-600 text-white': currentView === 'browser', 'bg-white text-gray-700 hover:bg-gray-100': currentView !== 'browser'}" class="px-4 py-2 rounded-md shadow-sm transition-colors">
+          <i class="fas fa-search mr-2"></i>Object Browser
+        </button>
+      </div>
+
+      <!-- Buckets View -->
+      <div x-show="currentView === 'buckets'" class="slide-enter">
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+          <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+            <h2 class="text-lg font-medium">My Buckets</h2>
+            <button @click="showBucketModal = true" class="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+              <i class="fas fa-plus mr-1"></i>Create Bucket
+            </button>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+            <template x-for="bucket in buckets" :key="bucket.id">
+              <div class="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                <div class="bg-gray-50 p-4 border-b border-gray-200">
+                  <div class="flex justify-between items-center">
+                    <h3 class="font-medium" x-text="bucket.name"></h3>
+                    <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full" x-text="bucket.access"></span>
+                  </div>
+                </div>
+                <div class="p-4">
+                  <div class="flex items-center text-sm text-gray-600 mb-2">
+                    <span class="font-medium mr-2">Objects:</span>
+                    <span x-text="bucket.objectCount"></span>
+                  </div>
+                  <div class="flex items-center text-sm text-gray-600 mb-4">
+                    <span class="font-medium mr-2">Size:</span>
+                    <span x-text="bucket.size"></span>
+                  </div>
+                  <div class="flex justify-between">
+                    <button @click="openBucket(bucket)" class="px-3 py-1 bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 transition-colors">
+                      <i class="fas fa-folder-open mr-1"></i>Browse
+                    </button>
+                    <div class="flex space-x-2">
+                      <button @click="editBucket(bucket)" class="text-blue-600 hover:text-blue-800">
+                        <i class="fas fa-edit"></i>
+                      </button>
+                      <button @click="deleteBucket(bucket)" class="text-red-600 hover:text-red-800">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </template>
+            
+            <!-- Empty State -->
+            <div x-show="buckets.length === 0" class="md:col-span-2 lg:col-span-3 border border-dashed border-gray-300 rounded-lg p-8 text-center">
+              <div class="flex flex-col items-center">
+                <svg class="h-12 w-12 text-gray-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                </svg>
+                <p class="text-lg font-medium text-gray-700">No buckets created yet</p>
+                <p class="mt-1 text-gray-500">Create your first bucket to start storing objects</p>
+                <button @click="showBucketModal = true" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                  <i class="fas fa-plus mr-2"></i>Create Bucket
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upload View -->
+      <div x-show="currentView === 'upload'" class="slide-enter">
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h2 class="text-lg font-medium mb-4">Upload Objects</h2>
+          <form @submit.prevent="uploadObjects">
+            <div class="space-y-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Select Bucket</label>
+                <div class="relative">
+                  <select x-model="upload.bucket" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 appearance-none">
+                    <option value="">Select Bucket</option>
+                    <template x-for="bucket in buckets" :key="bucket.id">
+                      <option :value="bucket.id" x-text="bucket.name"></option>
+                    </template>
+                  </select>
+                  <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                    <i class="fas fa-chevron-down text-gray-400"></i>
+                  </div>
+                </div>
+                <div x-show="buckets.length === 0" class="mt-1 text-sm text-red-500">
+                  You need to create a bucket first. <button type="button" @click="showBucketModal = true" class="text-blue-600 hover:text-blue-800">Create Bucket</button>
+                </div>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Folder Path (Optional)</label>
+                <div class="flex">
+                  <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
+                    /
+                  </span>
+                  <input x-model="upload.path" type="text" class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md border border-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" placeholder="images/profile">
+                </div>
+                <p class="mt-1 text-xs text-gray-500">Leave empty to upload to the root of the bucket</p>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Files</label>
+                <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md" 
+                     x-data="{ 
+                       files: [],
+                       handleFiles(event) {
+                         this.files = Array.from(event.target.files || []);
+                       },
+                       removeFile(index) {
+                         this.files.splice(index, 1);
+                       }
+                     }">
+                  <div class="space-y-1 text-center" x-show="files.length === 0">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                      <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <div class="flex text-sm text-gray-600">
+                      <label for="file-upload" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                        <span>Upload files</span>
+                        <input id="file-upload" name="file-upload" type="file" class="sr-only" multiple @change="handleFiles">
+                      </label>
+                      <p class="pl-1">or drag and drop</p>
+                    </div>
+                    <p class="text-xs text-gray-500">
+                      PNG, JPG, GIF, PDF, ZIP up to 50MB
+                    </p>
+                  </div>
+                  
+                  <div class="w-full" x-show="files.length > 0">
+                    <h4 class="text-sm font-medium text-gray-700 mb-2">Selected Files</h4>
+                    <ul class="divide-y divide-gray-200 max-h-48 overflow-y-auto">
+                      <template x-for="(file, index) in files" :key="index">
+                        <li class="py-2 flex justify-between items-center">
+                          <div class="flex items-center">
+                            <i class="fas fa-file text-gray-400 mr-2"></i>
+                            <span class="text-sm text-gray-700" x-text="file.name"></span>
+                            <span class="ml-2 text-xs text-gray-500" x-text="(file.size / 1024).toFixed(1) + ' KB'"></span>
+                          </div>
+                          <button type="button" @click="removeFile(index)" class="text-red-600 hover:text-red-800">
+                            <i class="fas fa-times"></i>
+                          </button>
+                        </li>
+                      </template>
+                    </ul>
+                    <div class="mt-3 flex justify-center">
+                      <label for="add-more-files" class="cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                        <span>Add more files</span>
+                        <input id="add-more-files" name="add-more-files" type="file" class="sr-only" multiple @change="handleFiles">
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div x-data="{ showAdvanced: false }">
+                <div class="flex items-center justify-between">
+                  <label class="block text-sm font-medium text-gray-700">Advanced Options</label>
+                  <button type="button" @click="showAdvanced = !showAdvanced" class="text-sm text-blue-600 hover:text-blue-800">
+                    <span x-show="!showAdvanced"><i class="fas fa-cog mr-1"></i>Show Advanced</span>
+                    <span x-show="showAdvanced"><i class="fas fa-cog mr-1"></i>Hide Advanced</span>
+                  </button>
+                </div>
+                
+                <div x-show="showAdvanced" class="mt-2 border border-gray-200 rounded-md p-3 bg-gray-50 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Content Type</label>
+                    <select x-model="upload.contentType" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                      <option value="auto">Auto-detect</option>
+                      <option value="image/jpeg">image/jpeg</option>
+                      <option value="image/png">image/png</option>
+                      <option value="application/pdf">application/pdf</option>
+                      <option value="text/plain">text/plain</option>
+                      <option value="application/json">application/json</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Access Control</label>
+                    <select x-model="upload.access" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                      <option value="private">Private</option>
+                      <option value="public-read">Public Read</option>
+                      <option value="authenticated-read">Authenticated Read</option>
+                    </select>
+                  </div>
+                  
+                  <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Cache Control</label>
+                    <input x-model="upload.cacheControl" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" placeholder="max-age=3600">
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="mt-6 flex justify-end space-x-3">
+              <button type="button" @click="currentView = 'buckets'" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                Cancel
+              </button>
+              <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <i class="fas fa-upload mr-2"></i>Upload Files
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Object Browser View -->
+      <div x-show="currentView === 'browser'" class="slide-enter">
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+          <div class="p-4 border-b border-gray-200 flex flex-col md:flex-row md:justify-between md:items-center space-y-3 md:space-y-0">
+            <div class="flex items-center space-x-2">
+              <select x-model="browser.bucket" class="border border-gray-300 rounded-md px-3 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                <option value="">Select Bucket</option>
+                <template x-for="bucket in buckets" :key="bucket.id">
+                  <option :value="bucket.id" x-text="bucket.name"></option>
+                </template>
+              </select>
+              <div class="text-gray-500">/</div>
+              <input x-model="browser.path" type="text" class="flex-1 min-w-0 px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" placeholder="Path">
+              <button class="px-3 py-1 bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 transition-colors">
+                <i class="fas fa-search"></i>
+              </button>
+            </div>
+            <div class="flex space-x-2">
+              <button class="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                <i class="fas fa-folder-plus mr-1"></i>New Folder
+              </button>
+              <button @click="currentView = 'upload'" class="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                <i class="fas fa-upload mr-1"></i>Upload
+              </button>
+            </div>
+          </div>
+          
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Size</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Modified</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <!-- Parent Directory -->
+                <tr class="hover:bg-gray-50">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <i class="fas fa-level-up-alt text-gray-400 mr-2"></i>
+                      <a href="#" class="text-blue-600 hover:text-blue-800">..</a>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                      Directory
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">-</td>
+                </tr>
+                
+                <!-- Folders -->
+                <tr class="hover:bg-gray-50">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <i class="fas fa-folder text-yellow-400 mr-2"></i>
+                      <a href="#" class="text-blue-600 hover:text-blue-800">images</a>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                      Directory
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2023-05-15 14:30</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div class="flex space-x-2">
+                      <button class="text-red-600 hover:text-red-900">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                
+                <!-- Files -->
+                <tr class="hover:bg-gray-50">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <i class="fas fa-file-image text-blue-400 mr-2"></i>
+                      <a href="#" class="text-blue-600 hover:text-blue-800">banner.jpg</a>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                      image/jpeg
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">1.2 MB</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2023-05-15 14:30</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div class="flex space-x-2">
+                      <button class="text-blue-600 hover:text-blue-900">
+                        <i class="fas fa-download"></i>
+                      </button>
+                      <button class="text-green-600 hover:text-green-900">
+                        <i class="fas fa-link"></i>
+                      </button>
+                      <button class="text-red-600 hover:text-red-900">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="hover:bg-gray-50">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <i class="fas fa-file-pdf text-red-400 mr-2"></i>
+                      <a href="#" class="text-blue-600 hover:text-blue-800">document.pdf</a>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                      application/pdf
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2.5 MB</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2023-05-14 09:15</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div class="flex space-x-2">
+                      <button class="text-blue-600 hover:text-blue-900">
+                        <i class="fas fa-download"></i>
+                      </button>
+                      <button class="text-green-600 hover:text-green-900">
+                        <i class="fas fa-link"></i>
+                      </button>
+                      <button class="text-red-600 hover:text-red-900">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="hover:bg-gray-50">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <i class="fas fa-file-code text-green-400 mr-2"></i>
+                      <a href="#" class="text-blue-600 hover:text-blue-800">data.json</a>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                      application/json
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">4.8 KB</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2023-05-13 11:45</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div class="flex space-x-2">
+                      <button class="text-blue-600 hover:text-blue-900">
+                        <i class="fas fa-download"></i>
+                      </button>
+                      <button class="text-green-600 hover:text-green-900">
+                        <i class="fas fa-link"></i>
+                      </button>
+                      <button class="text-red-600 hover:text-red-900">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <div class="p-4 border-t border-gray-200 flex justify-between items-center">
+            <div class="text-sm text-gray-500">
+              Showing 4 items
+            </div>
+            <div class="flex space-x-2">
+              <button class="px-3 py-1 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors">
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <button class="px-3 py-1 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors">
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Create Bucket Modal -->
+    <div x-show="showBucketModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 fade-enter" x-cloak>
+      <div @click.away="showBucketModal = false" class="bg-white rounded-lg shadow-xl max-w-md w-full">
+        <div class="flex justify-between items-center border-b border-gray-200 px-6 py-4">
+          <h3 class="text-lg font-medium">Create Bucket</h3>
+          <button @click="showBucketModal = false" class="text-gray-400 hover:text-gray-600">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="p-6">
+          <form @submit.prevent="createBucket">
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Bucket Name</label>
+                <input x-model="newBucket.name" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" placeholder="my-awesome-bucket">
+                <p class="mt-1 text-xs text-gray-500">Bucket names must be unique and can only contain lowercase letters, numbers, and hyphens.</p>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Access Control</label>
+                <div class="relative">
+                  <select x-model="newBucket.access" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 appearance-none">
+                    <option value="private">Private</option>
+                    <option value="public-read">Public Read</option>
+                    <option value="authenticated-read">Authenticated Read</option>
+                  </select>
+                  <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                    <i class="fas fa-chevron-down text-gray-400"></i>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Region</label>
+                <div class="relative">
+                  <select x-model="newBucket.region" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 appearance-none">
+                    <option value="us-east-1">US East (N. Virginia)</option>
+                    <option value="us-west-1">US West (N. California)</option>
+                    <option value="eu-west-1">EU (Ireland)</option>
+                    <option value="ap-northeast-1">Asia Pacific (Tokyo)</option>
+                  </select>
+                  <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                    <i class="fas fa-chevron-down text-gray-400"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="mt-6 flex justify-end space-x-3">
+              <button type="button" @click="showBucketModal = false" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                Cancel
+              </button>
+              <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                Create Bucket
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 py-6">
+      <div class="container mx-auto px-4">
+        <div class="flex flex-col md:flex-row justify-between items-center">
+          <div class="flex items-center space-x-2 mb-4 md:mb-0">
+            <svg class="h-6 w-6 text-teal-600" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M21 9V15C21 18.3137 18.3137 21 15 21H9C5.68629 21 3 18.3137 3 15V9C3 5.68629 5.68629 3 9 3H15C18.3137 3 21 5.68629 21 9Z" stroke="currentColor" stroke-width="2"/>
+              <path d="M7 9.5H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M7 14.5H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span class="text-gray-600">Lite Web Services</span>
+          </div>
+          <div class="flex space-x-4">
+            <a href="#" class="text-gray-500 hover:text-teal-600">
+              <i class="fab fa-github"></i>
+            </a>
+            <a href="#" class="text-gray-500 hover:text-teal-600">
+              <i class="fab fa-twitter"></i>
+            </a>
+            <a href="#" class="text-gray-500 hover:text-teal-600">
+              <i class="fab fa-linkedin"></i>
+            </a>
+          </div>
+          <div class="mt-4 md:mt-0 text-sm text-gray-500">
+            &copy; 2023 Lite Web Services. All rights reserved.
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    function appState() {
+      return {
+        currentView: 'buckets',
+        showNotifications: false,
+        showBucketModal: false,
+        notifications: [
+          {
+            id: 1,
+            type: 'success',
+            title: 'File Uploaded',
+            message: 'banner.jpg was successfully uploaded',
+            time: '5 minutes ago'
+          },
+          {
+            id: 2,
+            type: 'error',
+            title: 'Upload Failed',
+            message: 'Failed to upload large-file.zip',
+            time: '15 minutes ago'
+          }
+        ],
+        buckets: [
+          {
+            id: 1,
+            name: 'assets-bucket',
+            access: 'Private',
+            objectCount: 24,
+            size: '45.2 MB',
+            region: 'us-east-1'
+          },
+          {
+            id: 2,
+            name: 'public-assets',
+            access: 'Public',
+            objectCount: 12,
+            size: '128.5 MB',
+            region: 'us-west-1'
+          }
+        ],
+        newBucket: {
+          name: '',
+          access: 'private',
+          region: 'us-east-1'
+        },
+        upload: {
+          bucket: '',
+          path: '',
+          contentType: 'auto',
+          access: 'private',
+          cacheControl: ''
+        },
+        browser: {
+          bucket: '',
+          path: ''
+        },
+        createBucket() {
+          // Simulate bucket creation
+          const id = this.buckets.length + 1;
+          const bucket = {
+            id,
+            name: this.newBucket.name,
+            access: this.newBucket.access === 'private' ? 'Private' : (this.newBucket.access === 'public-read' ? 'Public' : 'Authenticated'),
+            objectCount: 0,
+            size: '0 B',
+            region: this.newBucket.region
+          };
+          
+          this.buckets.push(bucket);
+          this.showBucketModal = false;
+          
+          // Add notification
+          this.notifications.unshift({
+            id: Date.now(),
+            type: 'success',
+            title: 'Bucket Created',
+            message: `${bucket.name} has been created`,
+            time: 'Just now'
+          });
+          
+          // Reset form
+          this.newBucket = {
+            name: '',
+            access: 'private',
+            region: 'us-east-1'
+          };
+        },
+        openBucket(bucket) {
+          this.browser.bucket = bucket.id;
+          this.browser.path = '';
+          this.currentView = 'browser';
+        },
+        editBucket(bucket) {
+          // Edit bucket logic
+          console.log('Editing bucket:', bucket);
+        },
+        deleteBucket(bucket) {
+          if (confirm(`Are you sure you want to delete ${bucket.name}? This will delete all objects in the bucket.`)) {
+            this.buckets = this.buckets.filter(b => b.id !== bucket.id);
+            this.notifications.unshift({
+              id: Date.now(),
+              type: 'info',
+              title: 'Bucket Deleted',
+              message: `${bucket.name} has been deleted`,
+              time: 'Just now'
+            });
+          }
+        },
+        uploadObjects() {
+          // Simulate upload
+          this.notifications.unshift({
+            id: Date.now(),
+            type: 'success',
+            title: 'Files Uploaded',
+            message: `Files were successfully uploaded to ${this.buckets.find(b => b.id == this.upload.bucket)?.name || 'bucket'}`,
+            time: 'Just now'
+          });
+          
+          // Reset form
+          this.upload = {
+            bucket: '',
+            path: '',
+            contentType: 'auto',
+            access: 'private',
+            cacheControl: ''
+          };
+          
+          // Switch to browser view
+          this.currentView = 'browser';
+        }
+      };
+    }
+  </script>
+</body>
+</html>

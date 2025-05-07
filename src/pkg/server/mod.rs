@@ -1,8 +1,8 @@
 pub mod handlers;
-pub mod templates;
 pub mod middlewares;
 pub mod router;
 pub mod state;
+pub mod uispec;
 
 use crate::{conf::settings, prelude::Result};
 use router::build_routes;

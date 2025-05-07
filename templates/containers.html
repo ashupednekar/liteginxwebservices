@@ -1,0 +1,482 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lite Web Services - Containers</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://unpkg.com/htmx.org@1.9.6"></script>
+  <script src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js" defer></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    [x-cloak] { display: none !important; }
+    .slide-enter { 
+      animation: slide-in 0.3s ease-out;
+    }
+    @keyframes slide-in {
+      0% { transform: translateY(10px); opacity: 0; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
+    .fade-enter {
+      animation: fade-in 0.2s ease-out;
+    }
+    @keyframes fade-in {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen">
+  <div x-data="appState()" class="flex flex-col min-h-screen">
+    <!-- Fixed Top Bar -->
+    <header class="bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-md fixed top-0 left-0 right-0 z-10">
+      <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+        <div class="flex items-center space-x-4">
+          <div class="flex items-center space-x-2">
+            <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M21 9V15C21 18.3137 18.3137 21 15 21H9C5.68629 21 3 18.3137 3 15V9C3 5.68629 5.68629 3 9 3H15C18.3137 3 21 5.68629 21 9Z" stroke="currentColor" stroke-width="2"/>
+              <path d="M7 9.5H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M7 14.5H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <h1 class="text-xl font-bold">Lite Web Services</h1>
+          </div>
+          
+          <!-- Project Selection Dropdown -->
+          <div class="relative" x-data="{ open: false }">
+            <button @click="open = !open" class="flex items-center space-x-2 bg-teal-600 hover:bg-teal-700 px-3 py-1 rounded-md transition-colors">
+              <span x-text="currentProject.name">Default Project</span>
+              <i class="fas fa-chevron-down text-xs"></i>
+            </button>
+            <div x-show="open" @click.away="open = false" x-cloak class="absolute left-0 mt-2 w-56 bg-white rounded-md shadow-lg z-20">
+              <div class="py-1">
+                <template x-for="project in projects" :key="project.id">
+                  <a href="#" @click.prevent="selectProject(project); open = false" class="block px-4 py-2 text-gray-800 hover:bg-teal-50 hover:text-teal-600" x-text="project.name"></a>
+                </template>
+                <div class="border-t border-gray-100 mt-1 pt-1">
+                  <a href="#" @click.prevent="showNewProjectModal = true; open = false" class="block px-4 py-2 text-teal-600 hover:bg-teal-50">
+                    <i class="fas fa-plus mr-2"></i>New Project
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="flex items-center space
+
+Let me fix the containers.html file and provide all four files correctly:
+
+```html file="containers.html" isFixed
+&lt;!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lite Web Services - Containers</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://unpkg.com/htmx.org@1.9.6"></script>
+  <script src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js" defer></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    [x-cloak] { display: none !important; }
+    .slide-enter { 
+      animation: slide-in 0.3s ease-out;
+    }
+    @keyframes slide-in {
+      0% { transform: translateY(10px); opacity: 0; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
+    .fade-enter {
+      animation: fade-in 0.2s ease-out;
+    }
+    @keyframes fade-in {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen">
+  <div x-data="appState()" class="flex flex-col min-h-screen">
+    &lt;!-- Fixed Top Bar -->
+    <header class="bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-md fixed top-0 left-0 right-0 z-10">
+      <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+        <div class="flex items-center space-x-4">
+          <div class="flex items-center space-x-2">
+            <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M21 9V15C21 18.3137 18.3137 21 15 21H9C5.68629 21 3 18.3137 3 15V9C3 5.68629 5.68629 3 9 3H15C18.3137 3 21 5.68629 21 9Z" stroke="currentColor" stroke-width="2"/>
+              <path d="M7 9.5H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M7 14.5H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <h1 class="text-xl font-bold">Lite Web Services</h1>
+          </div>
+          
+          &lt;!-- Project Selection Dropdown -->
+          <div class="relative" x-data="{ open: false }">
+            <button @click="open = !open" class="flex items-center space-x-2 bg-teal-600 hover:bg-teal-700 px-3 py-1 rounded-md transition-colors">
+              <span x-text="currentProject.name">Default Project</span>
+              <i class="fas fa-chevron-down text-xs"></i>
+            </button>
+            <div x-show="open" @click.away="open = false" x-cloak class="absolute left-0 mt-2 w-56 bg-white rounded-md shadow-lg z-20">
+              <div class="py-1">
+                <template x-for="project in projects" :key="project.id">
+                  <a href="#" @click.prevent="selectProject(project); open = false" class="block px-4 py-2 text-gray-800 hover:bg-teal-50 hover:text-teal-600" x-text="project.name"></a>
+                </template>
+                <div class="border-t border-gray-100 mt-1 pt-1">
+                  <a href="#" @click.prevent="showNewProjectModal = true; open = false" class="block px-4 py-2 text-teal-600 hover:bg-teal-50">
+                    <i class="fas fa-plus mr-2"></i>New Project
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="flex items-center space-x-4">
+          <button @click="showNotifications = !showNotifications" class="relative p-1 rounded-full hover:bg-teal-600 transition-colors">
+            <i class="fas fa-bell"></i>
+            <span x-show="notifications.length > 0" class="absolute top-0 right-0 h-4 w-4 bg-red-500 rounded-full flex items-center justify-center text-xs" x-text="notifications.length"></span>
+          </button>
+          <div x-show="showNotifications" @click.away="showNotifications = false" x-cloak class="absolute right-4 mt-12 w-80 bg-white rounded-lg shadow-xl z-50 fade-enter">
+            <div class="p-3 border-b border-gray-200">
+              <h3 class="font-medium">Notifications</h3>
+            </div>
+            <div class="max-h-64 overflow-y-auto">
+              <template x-for="notification in notifications" :key="notification.id">
+                <div class="p-3 border-b border-gray-100 hover:bg-gray-50">
+                  <div class="flex items-start">
+                    <div x-show="notification.type === 'success'" class="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-500">
+                      <i class="fas fa-check"></i>
+                    </div>
+                    <div x-show="notification.type === 'error'" class="flex-shrink-0 w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-500">
+                      <i class="fas fa-exclamation"></i>
+                    </div>
+                    <div x-show="notification.type === 'info'" class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-500">
+                      <i class="fas fa-info"></i>
+                    </div>
+                    <div class="ml-3 flex-1">
+                      <p class="text-sm font-medium" x-text="notification.title"></p>
+                      <p class="text-xs text-gray-500 mt-1" x-text="notification.message"></p>
+                      <p class="text-xs text-gray-400 mt-1" x-text="notification.time"></p>
+                    </div>
+                  </div>
+                </div>
+              </template>
+              <div x-show="notifications.length === 0" class="p-4 text-center text-gray-500">
+                No notifications
+              </div>
+            </div>
+          </div>
+          <button class="bg-white text-teal-600 px-3 py-1 rounded-md hover:bg-teal-50 transition-colors">
+            <i class="fas fa-user mr-1"></i> Account
+          </button>
+        </div>
+      </div>
+    </header>
+
+    &lt;!-- Navigation -->
+    <nav class="bg-white shadow-sm fixed top-14 left-0 right-0 z-10">
+      <div class="container mx-auto px-4">
+        <div class="flex space-x-1">
+          <a href="/" hx-get="/" hx-target="#main-content" hx-push-url="true" class="px-3 py-4 text-gray-700 hover:text-teal-600 border-b-2 border-transparent hover:border-teal-500 font-medium">
+            <i class="fas fa-home mr-1"></i> Home
+          </a>
+          <a href="/containers" hx-get="/containers" hx-target="#main-content" hx-push-url="true" class="px-3 py-4 text-teal-600 border-b-2 border-teal-500 font-medium">
+            <i class="fas fa-cubes mr-1"></i> Containers
+          </a>
+          <a href="/functions" hx-get="/functions" hx-target="#main-content" hx-push-url="true" class="px-3 py-4 text-gray-700 hover:text-teal-600 border-b-2 border-transparent hover:border-teal-500 font-medium">
+            <i class="fas fa-bolt mr-1"></i> Functions
+          </a>
+          <a href="/buckets" hx-get="/buckets" hx-target="#main-content" hx-push-url="true" class="px-3 py-4 text-gray-700 hover:text-teal-600 border-b-2 border-transparent hover:border-teal-500 font-medium">
+            <i class="fas fa-database mr-1"></i> Buckets
+          </a>
+          <a href="/settings" hx-get="/settings" hx-target="#main-content" hx-push-url="true" class="px-3 py-4 text-gray-700 hover:text-teal-600 border-b-2 border-transparent hover:border-teal-500 font-medium">
+            <i class="fas fa-cog mr-1"></i> Settings
+          </a>
+        </div>
+      </div>
+    </nav>
+
+    &lt;!-- Main Content with padding for fixed header -->
+    <main id="main-content" class="flex-grow container mx-auto px-4 pt-32 pb-6">
+      &lt;!-- View Selector -->
+      <div class="flex space-x-2 mb-6">
+        <button @click="currentView = 'containers'" :class="{'bg-teal-600 text-white': currentView === 'containers', 'bg-white text-gray-700 hover:bg-gray-100': currentView !== 'containers'}" class="px-4 py-2 rounded-md shadow-sm transition-colors">
+          <i class="fas fa-cubes mr-2"></i>My Containers
+        </button>
+        <button @click="currentView = 'create'" :class="{'bg-teal-600 text-white': currentView === 'create', 'bg-white text-gray-700 hover:bg-gray-100': currentView !== 'create'}" class="px-4 py-2 rounded-md shadow-sm transition-colors">
+          <i class="fas fa-plus mr-2"></i>Deploy New
+        </button>
+        <button @click="currentView = 'registries'" :class="{'bg-teal-600 text-white': currentView === 'registries', 'bg-white text-gray-700 hover:bg-gray-100': currentView !== 'registries'}" class="px-4 py-2 rounded-md shadow-sm transition-colors">
+          <i class="fas fa-server mr-2"></i>Registries
+        </button>
+      </div>
+
+      &lt;!-- Container List View -->
+      <div x-show="currentView === 'containers'" class="slide-enter">
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+          <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+            <h2 class="text-lg font-medium">My Containers</h2>
+            <div class="flex space-x-2">
+              <div class="relative">
+                <input type="text" placeholder="Search containers..." class="pl-8 pr-4 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500">
+                <i class="fas fa-search absolute left-3 top-2 text-gray-400"></i>
+              </div>
+              <select class="border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500">
+                <option>All Status</option>
+                <option>Running</option>
+                <option>Stopped</option>
+                <option>Failed</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Port</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <template x-for="container in containers" :key="container.id">
+                  <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <div x-text="container.name" class="font-medium text-gray-900"></div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div x-text="container.image" class="text-sm text-gray-500"></div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span x-show="container.status === 'running'" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                        Running
+                      </span>
+                      <span x-show="container.status === 'stopped'" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                        Stopped
+                      </span>
+                      <span x-show="container.status === 'failed'" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                        Failed
+                      </span>
+                      <span x-show="container.status === 'deploying'" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                        Deploying
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="container.port"></td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="container.created"></td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div class="flex space-x-2">
+                        <button @click="openContainerDetails(container)" class="text-teal-600 hover:text-teal-900">
+                          <i class="fas fa-eye"></i>
+                        </button>
+                        <button x-show="container.status === 'running'" @click="stopContainer(container)" class="text-yellow-600 hover:text-yellow-900">
+                          <i class="fas fa-pause"></i>
+                        </button>
+                        <button x-show="container.status === 'stopped'" @click="startContainer(container)" class="text-green-600 hover:text-green-900">
+                          <i class="fas fa-play"></i>
+                        </button>
+                        <button @click="deleteContainer(container)" class="text-red-600 hover:text-red-900">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </template>
+                <tr x-show="containers.length === 0">
+                  <td colspan="6" class="px-6 py-10 text-center text-gray-500">
+                    <div class="flex flex-col items-center">
+                      <svg class="h-12 w-12 text-gray-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                      </svg>
+                      <p class="text-lg font-medium">No containers deployed yet</p>
+                      <p class="mt-1">Deploy your first container to get started</p>
+                      <button @click="currentView = 'create'" class="mt-4 bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700 transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Deploy Container
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      &lt;!-- Create Container View -->
+      <div x-show="currentView === 'create'" class="slide-enter">
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h2 class="text-lg font-medium mb-4">Deploy New Container</h2>
+          <form @submit.prevent="deployContainer" hx-post="/containers" hx-target="#main-content">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Container Name</label>
+                <input x-model="newContainer.name" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500" placeholder="my-awesome-app">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Registry</label>
+                <div class="relative">
+                  <select x-model="newContainer.registry" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500 appearance-none">
+                    <option value="">Select Registry</option>
+                    <option value="docker-hub">Docker Hub (Public)</option>
+                    <template x-for="registry in registries" :key="registry.id">
+                      <option :value="registry.id" x-text="registry.name"></option>
+                    </template>
+                  </select>
+                  <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                    <i class="fas fa-chevron-down text-gray-400"></i>
+                  </div>
+                </div>
+                <div class="mt-1 flex justify-end">
+                  <button type="button" @click="showRegistryModal = true" class="text-sm text-teal-600 hover:text-teal-800">
+                    <i class="fas fa-plus-circle mr-1"></i>Add Registry
+                  </button>
+                </div>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Image</label>
+                <input x-model="newContainer.image" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500" placeholder="nginx:latest">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Port</label>
+                <input x-model="newContainer.port" type="number" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500" placeholder="8080">
+              </div>
+              
+              <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Path</label>
+                <div class="flex">
+                  <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
+                    /
+                  </span>
+                  <input x-model="newContainer.path" type="text" class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md border border-gray-300 focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500" placeholder="api">
+                </div>
+              </div>
+              
+              <div x-data="{ showEnv: false }" class="md:col-span-2">
+                <div class="flex items-center justify-between">
+                  <label class="block text-sm font-medium text-gray-700">Environment Variables</label>
+                  <button type="button" @click="showEnv = !showEnv" class="text-sm text-teal-600 hover:text-teal-800">
+                    <span x-show="!showEnv"><i class="fas fa-plus-circle mr-1"></i>Add Variables</span>
+                    <span x-show="showEnv"><i class="fas fa-minus-circle mr-1"></i>Hide Variables</span>
+                  </button>
+                </div>
+                
+                <div x-show="showEnv" class="mt-2 border border-gray-200 rounded-md p-3 bg-gray-50">
+                  <template x-for="(_, index) in newContainer.env" :key="index">
+                    <div class="flex space-x-2 mb-2">
+                      <input x-model="newContainer.env[index].key" type="text" class="flex-1 px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500" placeholder="KEY">
+                      <input x-model="newContainer.env[index].value" type="text" class="flex-1 px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500" placeholder="value">
+                      <button type="button" @click="newContainer.env.splice(index, 1)" class="px-2 py-1 bg-red-100 text-red-600 rounded-md hover:bg-red-200">
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </div>
+                  </template>
+                  <button type="button" @click="newContainer.env.push({key: '', value: ''})" class="mt-1 text-sm text-teal-600 hover:text-teal-800">
+                    <i class="fas fa-plus mr-1"></i>Add Another Variable
+                  </button>
+                </div>
+              </div>
+              
+              <div x-data="{ showAdvanced: false }" class="md:col-span-2">
+                <div class="flex items-center justify-between">
+                  <label class="block text-sm font-medium text-gray-700">Advanced Options</label>
+                  <button type="button" @click="showAdvanced = !showAdvanced" class="text-sm text-teal-600 hover:text-teal-800">
+                    <span x-show="!showAdvanced"><i class="fas fa-cog mr-1"></i>Show Advanced</span>
+                    <span x-show="showAdvanced"><i class="fas fa-cog mr-1"></i>Hide Advanced</span>
+                  </button>
+                </div>
+                
+                <div x-show="showAdvanced" class="mt-2 border border-gray-200 rounded-md p-3 bg-gray-50 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">CPU Limit</label>
+                    <select x-model="newContainer.cpu" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500">
+                      <option value="0.5">0.5 CPU</option>
+                      <option value="1">1 CPU</option>
+                      <option value="2">2 CPU</option>
+                      <option value="4">4 CPU</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Memory Limit</label>
+                    <select x-model="newContainer.memory" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500">
+                      <option value="512">512 MB</option>
+                      <option value="1024">1 GB</option>
+                      <option value="2048">2 GB</option>
+                      <option value="4096">4 GB</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Auto Restart</label>
+                    <div class="flex items-center space-x-4">
+                      <label class="inline-flex items-center">
+                        <input type="radio" x-model="newContainer.autoRestart" value="true" class="text-teal-600 focus:ring-teal-500">
+                        <span class="ml-2">Yes</span>
+                      </label>
+                      <label class="inline-flex items-center">
+                        <input type="radio" x-model="newContainer.autoRestart" value="false" class="text-teal-600 focus:ring-teal-500">
+                        <span class="ml-2">No</span>
+                      </label>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Health Check Path</label>
+                    <input x-model="newContainer.healthCheck" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500" placeholder="/health">
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="mt-6 flex justify-end space-x-3">
+              <button type="button" @click="currentView = 'containers'" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
+                Cancel
+              </button>
+              <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
+                <i class="fas fa-rocket mr-2"></i>Deploy Container
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      &lt;!-- Registries View -->
+      <div x-show="currentView === 'registries'" class="slide-enter">
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-medium">Container Registries</h2>
+            <button @click="showRegistryModal = true" class="px-3 py-1 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors">
+              <i class="fas fa-plus mr-1"></i>Add Registry
+            </button>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            &lt;!-- Public Registry Card -->
+            <div class="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+              <div class="bg-gray-50 p-4 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                  <h3 class="font-medium">Docker Hub</h3>
+                  <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">Public</span>
+                </div>
+              </div>
+              <div class="p-4">
+                <p class="text-sm text-gray-600">Access public Docker Hub images without authentication.</p>
+                <div class="mt-4 flex justify-between items-center">
+                  <span class="text-xs text-gray-500">Default Registry</span>
+                  <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Active</span>
+                </div>
+              </div>
+            </div>
+            
+            &lt;!-- Registry Cards -->
+            <template x-for="registry in registries" :key="registry.id">
+              <div class="border

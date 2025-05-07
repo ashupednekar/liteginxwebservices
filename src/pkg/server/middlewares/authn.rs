@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use axum::{
     extract::{Request, State},
     http::{HeaderMap, StatusCode, header::COOKIE},
@@ -10,10 +12,15 @@ use standard_error::{StandardError, Status};
 
 use crate::{pkg::server::state::AppState, prelude::Result};
 
+#[derive(Debug)]
+pub struct UserDetails {
+    pub username: String,
+}
+
 pub async fn authenticate(
     State(state): State<AppState>,
     headers: HeaderMap,
-    request: Request,
+    mut request: Request,
     next: Next,
 ) -> Result<Response> {
     match CookieJar::from_headers(&headers)
@@ -32,8 +39,12 @@ pub async fn authenticate(
         }
         None => {
             tracing::debug!("token missing, autentication denied");
-            return Err(StandardError::new("ERR-AUTH-001").code(StatusCode::UNAUTHORIZED))
-        },
+            return Err(StandardError::new("ERR-AUTH-001").code(StatusCode::UNAUTHORIZED));
+        }
     };
+    let details = UserDetails {
+        username: "ashupednekar".into(),
+    };
+    request.extensions_mut().insert(Arc::new(details));
     Ok(next.run(request).await)
 }
