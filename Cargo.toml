@@ -27,7 +27,7 @@ uuid = { version = "1.12.1", features = ["v4"] }
 humantime = "2.1.0"
 lettre = "0.11.15"
 axum-extra = { version = "0.10.1", features = ["cookie"] }
-askama = { version = "0.14.0", features = ["derive"] }
+askama = { version = "0.14.0", features = ["derive", "serde_json"] }
 
 [dev-dependencies]
 sqlx-cli = "0.8.3"

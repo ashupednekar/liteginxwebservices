@@ -3,10 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lite Web Services - Home</title>
+  <title>LWS - Home</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <script src="https://unpkg.com/htmx.org@1.9.6"></script>
   <script src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js" defer></script>
+  <script>
+    document.addEventListener('alpine:init', () => {
+      Alpine.store('nav', { current: 'home' });
+      Alpine.store('theme', {
+        dark: (localStorage.theme === 'dark') || (window.matchMedia('(prefers-color-scheme: dark)').matches && !localStorage.theme),
+        toggle() {
+          this.dark = !this.dark;
+          document.documentElement.classList.toggle('dark', this.dark);
+          localStorage.theme = this.dark ? 'dark' : 'light';
+        }
+      });
+      // Set initial theme
+      document.documentElement.classList.toggle('dark', Alpine.store('theme').dark);
+    });
+  </script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     [x-cloak] { display: none !important; }
@@ -26,10 +41,10 @@
     }
   </style>
 </head>
-<body class="bg-gray-50 text-gray-800 min-h-screen">
+<body class="bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-100 min-h-screen">
   <div x-data="appState()" class="flex flex-col min-h-screen">
     <!-- Fixed Top Bar -->
-    <header class="bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-md fixed top-0 left-0 right-0 z-10">
+    <header :class="$store.theme.dark ? 'text-white' : 'text-black'" class="bg-gradient-to-r from-teal-500 to-teal-600 shadow-md fixed top-0 left-0 right-0 z-20">
       <div class="container mx-auto px-4 py-3 flex justify-between items-center">
         <div class="flex items-center space-x-4">
           <div class="flex items-center space-x-2">
@@ -38,19 +53,19 @@
               <path d="M7 9.5H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
               <path d="M7 14.5H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
             </svg>
-            <h1 class="text-xl font-bold">Lite Web Services</h1>
+            <h1 class="text-xl font-bold">LWS</h1>
           </div>
           
           <!-- Project Selection Dropdown -->
-          <div class="relative" x-data="{ open: false }">
-            <button @click="open = !open" class="flex items-center space-x-2 bg-teal-600 hover:bg-teal-700 px-3 py-1 rounded-md transition-colors">
-              <span x-text="currentProject.name">Default Project</span>
+          <div class="relative" x-data="{ open: false }" x-ref="projectDropdown">
+            <button @click="open = !open" class="flex items-center space-x-2 bg-teal-600 hover:bg-teal-700 px-3 py-1 rounded-md transition-colors max-w-xs">
+              <span class="truncate block max-w-[120px]" x-text="currentProject?.name || 'Select Project'"></span>
               <i class="fas fa-chevron-down text-xs"></i>
             </button>
             <div x-show="open" @click.away="open = false" x-cloak class="absolute left-0 mt-2 w-56 bg-white rounded-md shadow-lg z-20">
               <div class="py-1">
                 <template x-for="project in projects" :key="project.id">
-                  <a href="#" @click.prevent="selectProject(project); open = false" class="block px-4 py-2 text-gray-800 hover:bg-teal-50 hover:text-teal-600" x-text="project.name"></a>
+                  <a href="#" @click.prevent="selectProject(project); open = false" class="block px-4 py-2 text-gray-800 hover:bg-teal-50 hover:text-teal-600 truncate" x-text="project.name"></a>
                 </template>
                 <div class="border-t border-gray-100 mt-1 pt-1">
                   <a href="#" @click.prevent="showNewProjectModal = true; open = false" class="block px-4 py-2 text-teal-600 hover:bg-teal-50">
@@ -63,43 +78,60 @@
         </div>
         
         <div class="flex items-center space-x-4">
-          <button @click="showNotifications = !showNotifications" class="relative p-1 rounded-full hover:bg-teal-600 transition-colors">
-            <i class="fas fa-bell"></i>
-            <span x-show="notifications.length > 0" class="absolute top-0 right-0 h-4 w-4 bg-red-500 rounded-full flex items-center justify-center text-xs" x-text="notifications.length"></span>
+          <!-- Light/Dark Mode Toggle -->
+          <button @click="$store.theme.toggle()" class="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors" :title="$store.theme.dark ? 'Switch to light mode' : 'Switch to dark mode'">
+            <i :class="$store.theme.dark ? 'fas fa-sun' : 'fas fa-moon'"></i>
           </button>
-          <div x-show="showNotifications" @click.away="showNotifications = false" x-cloak class="absolute right-4 mt-8 w-80 bg-white rounded-lg shadow-xl z-50 fade-enter">
-            <div class="p-3 border-b border-gray-200">
-              <h3 class="font-medium">Notifications</h3>
-            </div>
-            <div class="max-h-64 overflow-y-auto">
-              <template x-for="notification in notifications" :key="notification.id">
-                <div class="p-3 border-b border-gray-100 hover:bg-gray-50">
-                  <div class="flex items-start">
-                    <div x-show="notification.type === 'success'" class="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-500">
-                      <i class="fas fa-check"></i>
-                    </div>
-                    <div x-show="notification.type === 'error'" class="flex-shrink-0 w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-500">
-                      <i class="fas fa-exclamation"></i>
-                    </div>
-                    <div x-show="notification.type === 'info'" class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-500">
-                      <i class="fas fa-info"></i>
-                    </div>
-                    <div class="ml-3 flex-1">
-                      <p class="text-sm font-medium" x-text="notification.title"></p>
-                      <p class="text-xs text-gray-500 mt-1" x-text="notification.message"></p>
-                      <p class="text-xs text-gray-400 mt-1" x-text="notification.time"></p>
+          <div class="relative" x-data="{ open: false }">
+            <button @click="open = !open" class="relative p-1 rounded-full hover:bg-teal-600 transition-colors">
+              <i class="fas fa-bell"></i>
+              <span x-show="notifications.length > 0" class="absolute top-0 right-0 h-4 w-4 bg-red-500 rounded-full flex items-center justify-center text-xs" x-text="notifications.length"></span>
+            </button>
+            <div x-show="open" @click.away="open = false" x-cloak class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl z-50 fade-enter" style="max-height: 80vh; overflow-y: auto;">
+              <div class="p-3 border-b border-gray-200">
+                <h3 class="font-medium">Notifications</h3>
+              </div>
+              <div class="max-h-64 overflow-y-auto">
+                <template x-for="notification in notifications" :key="notification.id">
+                  <div class="p-3 border-b border-gray-100 hover:bg-gray-50">
+                    <div class="flex items-start">
+                      <div x-show="notification.type === 'success'" class="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-500">
+                        <i class="fas fa-check"></i>
+                      </div>
+                      <div x-show="notification.type === 'error'" class="flex-shrink-0 w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-500">
+                        <i class="fas fa-exclamation"></i>
+                      </div>
+                      <div x-show="notification.type === 'info'" class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-500">
+                        <i class="fas fa-info"></i>
+                      </div>
+                      <div class="ml-3 flex-1">
+                        <p class="text-sm font-medium" x-text="notification.title"></p>
+                        <p class="text-xs text-gray-500 mt-1" x-text="notification.message"></p>
+                        <p class="text-xs text-gray-400 mt-1" x-text="notification.time"></p>
+                      </div>
                     </div>
                   </div>
+                </template>
+                <div x-show="notifications.length === 0" class="p-4 text-center text-gray-500">
+                  No notifications
                 </div>
-              </template>
-              <div x-show="notifications.length === 0" class="p-4 text-center text-gray-500">
-                No notifications
               </div>
             </div>
           </div>
-          <button class="bg-white text-teal-600 px-3 py-1 rounded-md hover:bg-teal-50 transition-colors">
-            <i class="fas fa-user mr-1"></i> Account
-          </button>
+          <div class="relative" x-data="{ open: false }">
+            <button @click="open = !open" class="flex items-center space-x-2 bg-white text-teal-600 px-3 py-1 rounded-md hover:bg-teal-50 transition-colors">
+              <i class="fas fa-user mr-1"></i>
+              <span x-text="username"></span>
+              <i class="fas fa-chevron-down text-xs"></i>
+            </button>
+            <div x-show="open" @click.away="open = false" x-cloak class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50">
+              <div class="py-1">
+                <a href="/logout" class="block px-4 py-2 text-gray-800 hover:bg-teal-50 hover:text-teal-600">
+                  <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </header>
@@ -108,171 +140,148 @@
     <nav class="bg-white shadow-sm fixed top-16 left-0 right-0 z-10">
       <div class="container mx-auto px-4">
         <div class="flex space-x-1">
-          <a href="/" class="px-3 py-4 text-teal-600 border-b-2 border-teal-500 font-medium">
+          <a href="/" class="px-3 py-4 font-medium" :class="$store.nav.current === 'home' ? 'text-teal-600 border-b-2 border-teal-500' : 'text-gray-700 hover:text-teal-600 border-b-2 border-transparent hover:border-teal-500'" hx-get="/" hx-push-url="true" hx-target="#main-content" @click="$store.nav.current = 'home'">
             <i class="fas fa-home mr-1"></i> Home
           </a>
-          <a href="/containers" hx-get="/containers" hx-push-url="true" hx-target="#main-content" class="px-3 py-4 text-gray-700 hover:text-teal-600 border-b-2 border-transparent hover:border-teal-500 font-medium">
+          <a href="/containers" class="px-3 py-4 font-medium" :class="$store.nav.current === 'containers' ? 'text-teal-600 border-b-2 border-teal-500' : 'text-gray-700 hover:text-teal-600 border-b-2 border-transparent hover:border-teal-500'" hx-get="/containers" hx-push-url="true" hx-target="#main-content" @click="$store.nav.current = 'containers'">
             <i class="fas fa-cubes mr-1"></i> Containers
           </a>
-          <a href="/functions" hx-get="/functions" hx-push-url="true" hx-target="#main-content" class="px-3 py-4 text-gray-700 hover:text-teal-600 border-b-2 border-transparent hover:border-teal-500 font-medium">
+          <a href="/functions" class="px-3 py-4 font-medium" :class="$store.nav.current === 'functions' ? 'text-teal-600 border-b-2 border-teal-500' : 'text-gray-700 hover:text-teal-600 border-b-2 border-transparent hover:border-teal-500'" hx-get="/functions" hx-push-url="true" hx-target="#main-content" @click="$store.nav.current = 'functions'">
             <i class="fas fa-bolt mr-1"></i> Functions
           </a>
-          <a href="/buckets" hx-get="/buckets" hx-push-url="true" hx-target="#main-content" class="px-3 py-4 text-gray-700 hover:text-teal-600 border-b-2 border-transparent hover:border-teal-500 font-medium">
+          <a href="/buckets" class="px-3 py-4 font-medium" :class="$store.nav.current === 'buckets' ? 'text-teal-600 border-b-2 border-teal-500' : 'text-gray-700 hover:text-teal-600 border-b-2 border-transparent hover:border-teal-500'" hx-get="/buckets" hx-push-url="true" hx-target="#main-content" @click="$store.nav.current = 'buckets'">
             <i class="fas fa-database mr-1"></i> Buckets
-          </a>
-          <a href="/settings" hx-get="/settings" hx-push-url="true" hx-target="#main-content" class="px-3 py-4 text-gray-700 hover:text-teal-600 border-b-2 border-transparent hover:border-teal-500 font-medium">
-            <i class="fas fa-cog mr-1"></i> Settings
           </a>
         </div>
       </div>
     </nav>
 
-    <!-- Main Content with padding for fixed header -->
-    <main id="main-content" class="flex-grow container mx-auto px-4 pt-32 pb-6">
-      <!-- Hero Section -->
-      <div class="bg-gradient-to-r from-teal-500 to-teal-600 rounded-lg shadow-md p-8 mb-6 text-white">
-        <div class="max-w-3xl">
-          <h1 class="text-3xl font-bold mb-4">Deploy your applications with ease</h1>
-          <p class="text-xl mb-6">Lite Web Services provides a simple, fast, and reliable platform for deploying your containers, functions, and storing your objects.</p>
-          <div class="flex flex-wrap gap-3">
-            <a href="/containers" hx-get="/containers" hx-push-url="true" hx-target="#main-content" class="bg-white text-teal-600 px-6 py-2 rounded-md font-medium hover:bg-teal-50 transition-colors">
-              <i class="fas fa-cubes mr-2"></i>Deploy Container
-            </a>
-            <a href="/functions" hx-get="/functions" hx-push-url="true" hx-target="#main-content" class="bg-teal-700 text-white px-6 py-2 rounded-md font-medium hover:bg-teal-800 transition-colors">
-              <i class="fas fa-bolt mr-2"></i>Create Function
-            </a>
+    <!-- Main Content -->
+    <main id="main-content" class="flex-grow container mx-auto px-4 py-6 pt-32">
+      <!-- Welcome Message -->
+      <div class="mb-10">
+        <span class="text-3xl font-extrabold font-sans text-teal-700 dark:text-teal-300">Welcome, <span x-text="username"></span></span>
+      </div>
+
+      <!-- Project Selector -->
+      <div class="mb-8">
+        <!-- Project Selection Required Message -->
+        <div x-show="!currentProject" class="bg-white rounded-lg shadow-md p-8 text-center pt-28">
+          <div class="max-w-md mx-auto">
+            <div class="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <i class="fas fa-project-diagram text-2xl text-teal-600"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">Select a Project</h2>
+            <p class="text-gray-600 mb-6">Please select a project to continue or create a new one.</p>
           </div>
         </div>
       </div>
 
-      <!-- Services Overview -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <!-- Containers Card -->
-        <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-          <div class="p-6">
-            <div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center text-teal-600 mb-4">
-              <i class="fas fa-cubes text-xl"></i>
+      <!-- Main Dashboard Content (only if project is selected) -->
+      <div x-show="currentProject">
+        <!-- Metrics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 mb-12">
+          <!-- Containers Card -->
+          <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-10 flex flex-col h-full min-h-[320px] min-w-[320px]">
+            <div class="flex items-center justify-between mb-6">
+              <div class="w-14 h-14 rounded-full bg-teal-100 flex items-center justify-center text-teal-600 mr-3 text-2xl">
+                <i class="fas fa-cubes"></i>
+              </div>
+              <span class="text-4xl font-extrabold text-teal-600" x-text="metrics.containers"></span>
             </div>
-            <h3 class="text-lg font-medium mb-2">Containers</h3>
-            <p class="text-gray-600 mb-4">Deploy containers from any registry with just a few clicks. We handle the infrastructure, you focus on your applications.</p>
-            <a href="/containers" hx-get="/containers" hx-push-url="true" hx-target="#main-content" class="text-teal-600 hover:text-teal-800 font-medium">
-              Manage Containers <i class="fas fa-arrow-right ml-1"></i>
+            <h3 class="text-2xl font-bold mb-3">Containers</h3>
+            <p class="text-lg text-gray-600 dark:text-gray-300 mb-6">Deploy and manage your containerized applications</p>
+            <a href="/containers" 
+               hx-get="/containers" 
+               hx-target="#main-content" 
+               hx-push-url="true"
+               hx-on::after-request="Alpine.store('nav').current = 'containers'"
+               class="inline-flex items-center text-teal-600 hover:text-teal-800 mt-auto text-lg font-semibold">
+              View Containers <i class="fas fa-arrow-right ml-2"></i>
+            </a>
+          </div>
+
+          <!-- Functions Card -->
+          <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-10 flex flex-col h-full min-h-[320px] min-w-[320px]">
+            <div class="flex items-center justify-between mb-6">
+              <div class="w-14 h-14 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 mr-3 text-2xl">
+                <i class="fas fa-bolt"></i>
+              </div>
+              <span class="text-4xl font-extrabold text-teal-600" x-text="metrics.functions"></span>
+            </div>
+            <h3 class="text-2xl font-bold mb-3">Functions</h3>
+            <p class="text-lg text-gray-600 dark:text-gray-300 mb-6">Run serverless functions with ease</p>
+            <a href="/functions" 
+               hx-get="/functions" 
+               hx-target="#main-content" 
+               hx-push-url="true"
+               hx-on::after-request="Alpine.store('nav').current = 'functions'"
+               class="inline-flex items-center text-teal-600 hover:text-teal-800 mt-auto text-lg font-semibold">
+              View Functions <i class="fas fa-arrow-right ml-2"></i>
+            </a>
+          </div>
+
+          <!-- Buckets Card -->
+          <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-10 flex flex-col h-full min-h-[320px] min-w-[320px]">
+            <div class="flex items-center justify-between mb-6">
+              <div class="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-3 text-2xl">
+                <i class="fas fa-database"></i>
+              </div>
+              <span class="text-4xl font-extrabold text-teal-600" x-text="metrics.buckets"></span>
+            </div>
+            <h3 class="text-2xl font-bold mb-3">Buckets</h3>
+            <p class="text-lg text-gray-600 dark:text-gray-300 mb-6">Store and manage your objects</p>
+            <a href="/buckets" 
+               hx-get="/buckets" 
+               hx-target="#main-content" 
+               hx-push-url="true"
+               hx-on::after-request="Alpine.store('nav').current = 'buckets'"
+               class="inline-flex items-center text-teal-600 hover:text-teal-800 mt-auto text-lg font-semibold">
+              View Buckets <i class="fas fa-arrow-right ml-2"></i>
             </a>
           </div>
         </div>
 
-        <!-- Functions Card -->
-        <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-          <div class="p-6">
-            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600 mb-4">
-              <i class="fas fa-bolt text-xl"></i>
-            </div>
-            <h3 class="text-lg font-medium mb-2">Functions</h3>
-            <p class="text-gray-600 mb-4">Write code that responds to events without managing servers. Perfect for APIs, webhooks, and data processing.</p>
-            <a href="/functions" hx-get="/functions" hx-push-url="true" hx-target="#main-content" class="text-purple-600 hover:text-purple-800 font-medium">
-              Manage Functions <i class="fas fa-arrow-right ml-1"></i>
-            </a>
+        <!-- Recent Activity -->
+        <div class="mt-12 bg-white dark:bg-gray-900 rounded-lg shadow-md overflow-hidden">
+          <div class="p-4 border-b border-gray-200 dark:border-gray-800">
+            <h2 class="text-lg font-medium">Recent Activity</h2>
           </div>
-        </div>
-
-        <!-- Objects Card -->
-        <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-          <div class="p-6">
-            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mb-4">
-              <i class="fas fa-database text-xl"></i>
+          <div class="p-4">
+            <div class="space-y-4">
+              <div class="flex items-start">
+                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-500">
+                  <i class="fas fa-check"></i>
+                </div>
+                <div class="ml-3">
+                  <p class="text-sm font-medium">Container Deployed</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">nginx-web was successfully deployed</p>
+                  <p class="text-xs text-gray-400">2 minutes ago</p>
+                </div>
+              </div>
+              <div class="flex items-start">
+                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-500">
+                  <i class="fas fa-exclamation"></i>
+                </div>
+                <div class="ml-3">
+                  <p class="text-sm font-medium">Deployment Failed</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">Failed to deploy api-service</p>
+                  <p class="text-xs text-gray-400">10 minutes ago</p>
+                </div>
+              </div>
+              <div class="flex items-start">
+                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-500">
+                  <i class="fas fa-info"></i>
+                </div>
+                <div class="ml-3">
+                  <p class="text-sm font-medium">Registry Added</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">Private registry was added successfully</p>
+                  <p class="text-xs text-gray-400">1 hour ago</p>
+                </div>
+              </div>
             </div>
-            <h3 class="text-lg font-medium mb-2">Buckets</h3>
-            <p class="text-gray-600 mb-4">Store and serve files of any size. Perfect for images, videos, backups, and any other type of file your application needs.</p>
-            <a href="/buckets" hx-get="/buckets" hx-push-url="true" hx-target="#main-content" class="text-blue-600 hover:text-blue-800 font-medium">
-              Manage Buckets <i class="fas fa-arrow-right ml-1"></i>
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Recent Activity -->
-      <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-        <h2 class="text-lg font-medium mb-4">Recent Activity</h2>
-        <div class="space-y-4">
-          <div class="flex items-start">
-            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-500">
-              <i class="fas fa-check"></i>
-            </div>
-            <div class="ml-3">
-              <p class="text-sm font-medium">Container Deployed</p>
-              <p class="text-xs text-gray-500">nginx-web was successfully deployed</p>
-              <p class="text-xs text-gray-400">2 minutes ago</p>
-            </div>
-          </div>
-          <div class="flex items-start">
-            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-500">
-              <i class="fas fa-exclamation"></i>
-            </div>
-            <div class="ml-3">
-              <p class="text-sm font-medium">Deployment Failed</p>
-              <p class="text-xs text-gray-500">Failed to deploy api-service</p>
-              <p class="text-xs text-gray-400">10 minutes ago</p>
-            </div>
-          </div>
-          <div class="flex items-start">
-            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-500">
-              <i class="fas fa-info"></i>
-            </div>
-            <div class="ml-3">
-              <p class="text-sm font-medium">Registry Added</p>
-              <p class="text-xs text-gray-500">Private registry was added successfully</p>
-              <p class="text-xs text-gray-400">1 hour ago</p>
-            </div>
-          </div>
-        </div>
-        <div class="mt-4 text-center">
-          <a href="#" class="text-sm text-teal-600 hover:text-teal-800 font-medium">View All Activity</a>
-        </div>
-      </div>
-
-      <!-- Quick Stats -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="bg-white rounded-lg shadow-md p-4">
-          <div class="flex items-center">
-            <div class="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center text-teal-600 mr-3">
-              <i class="fas fa-cubes"></i>
-            </div>
-            <div>
-              <p class="text-sm text-gray-500">Active Containers</p>
-              <p class="text-xl font-bold">2</p>
-            </div>
-          </div>
-        </div>
-        <div class="bg-white rounded-lg shadow-md p-4">
-          <div class="flex items-center">
-            <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 mr-3">
-              <i class="fas fa-bolt"></i>
-            </div>
-            <div>
-              <p class="text-sm text-gray-500">Active Functions</p>
-              <p class="text-xl font-bold">5</p>
-            </div>
-          </div>
-        </div>
-        <div class="bg-white rounded-lg shadow-md p-4">
-          <div class="flex items-center">
-            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-3">
-              <i class="fas fa-database"></i>
-            </div>
-            <div>
-              <p class="text-sm text-gray-500">Buckets</p>
-              <p class="text-xl font-bold">3</p>
-            </div>
-          </div>
-        </div>
-        <div class="bg-white rounded-lg shadow-md p-4">
-          <div class="flex items-center">
-            <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600 mr-3">
-              <i class="fas fa-clock"></i>
-            </div>
-            <div>
-              <p class="text-sm text-gray-500">Uptime</p>
-              <p class="text-xl font-bold">99.9%</p>
+            <div class="mt-4 text-center">
+              <a href="#" class="text-sm text-teal-600 hover:text-teal-800 font-medium">View All Activity</a>
             </div>
           </div>
         </div>
@@ -349,8 +358,11 @@
   <script>
     function appState() {
       return {
+        currentNav: 'home',
         showNotifications: false,
         showNewProjectModal: false,
+        currentProject: null,
+        username: '{{ username }}',
         notifications: [
           {
             id: 1,
@@ -374,38 +386,40 @@
             time: '1 hour ago'
           }
         ],
-        projects: [
-          { id: 1, name: 'Default Project' },
-          { id: 2, name: 'E-commerce API' },
-          { id: 3, name: 'Analytics Dashboard' }
-        ],
-        currentProject: { id: 1, name: 'Default Project' },
-        newProject: {
-          name: '',
-          description: ''
-        },
+        projects: JSON.parse('{{ projects|json|safe }}'),
+        metrics: JSON.parse('{{ metrics|json|safe }}'),
+        newProject: { name: '', description: '' },
         selectProject(project) {
           this.currentProject = project;
+          // Set project cookie (string id)
+          document.cookie = `current_project=${project.id}; path=/; max-age=31536000`;
+        },
+        init() {
+          // Check for project cookie on init
+          const cookies = document.cookie.split(';');
+          const projectCookie = cookies.find(c => c.trim().startsWith('current_project='));
+          if (projectCookie) {
+            const projectId = projectCookie.split('=')[1];
+            const project = this.projects.find(p => p.id === projectId);
+            if (project) {
+              this.currentProject = project;
+            }
+          }
         },
         createProject() {
           if (this.newProject.name.trim() === '') return;
-          
-          const id = this.projects.length + 1;
+          // Generate a random UUID for new project (simple version)
+          const uuid = URL.createObjectURL(new Blob()).split('/').pop();
           const project = {
-            id,
-            name: this.newProject.name
+            id: uuid,
+            name: this.newProject.name,
+            description: this.newProject.description
           };
-          
           this.projects.push(project);
-          this.currentProject = project;
+          this.selectProject(project);
           this.showNewProjectModal = false;
-          
           // Reset form
-          this.newProject = {
-            name: '',
-            description: ''
-          };
-          
+          this.newProject = { name: '', description: '' };
           // Add notification
           this.notifications.unshift({
             id: Date.now(),

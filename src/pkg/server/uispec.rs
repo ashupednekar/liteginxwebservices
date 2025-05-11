@@ -1,4 +1,9 @@
 use askama::Template;
+use serde::Serialize;
+
+#[derive(Template)]
+#[template(path = "verify.html")]
+pub struct Verify {}
 
 #[derive(Template)]
 #[template(path = "buckets.html")]
@@ -18,8 +23,25 @@ pub struct Functions<'a> {
     pub username: &'a str,
 }
 
+#[derive(Debug, Serialize)]
+pub struct Project<'a> {
+    pub id: String,
+    pub name: &'a str,
+    pub description: Option<&'a str>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct Metrics {
+    pub containers: i32,
+    pub functions: i32,
+    pub buckets: i32,
+    pub total_requests: i32,
+}
+
 #[derive(Template)]
 #[template(path = "home.html")]
 pub struct Home<'a> {
     pub username: &'a str,
+    pub projects: Vec<Project<'a>>,
+    pub metrics: Metrics,
 }
