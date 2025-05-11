@@ -10,14 +10,15 @@
   <script>
     document.addEventListener('alpine:init', () => {
       Alpine.store('theme', {
-        dark: true,
+        dark: localStorage.getItem('theme') === 'dark' || true,
         toggle() {
           this.dark = !this.dark;
           document.documentElement.classList.toggle('dark', this.dark);
-          localStorage.theme = this.dark ? 'dark' : 'light';
+          localStorage.setItem('theme', this.dark ? 'dark' : 'light');
         }
       });
-      document.documentElement.classList.add('dark');
+      // Initialize dark mode
+      document.documentElement.classList.toggle('dark', Alpine.store('theme').dark);
     });
   </script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">

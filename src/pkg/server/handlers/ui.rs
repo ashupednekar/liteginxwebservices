@@ -7,11 +7,6 @@ use crate::{
     prelude::Result,
 };
 
-pub async fn verify() -> Html<String> {
-    let template = Verify {};
-    Html(template.render().unwrap())
-}
-
 pub async fn buckets() -> Html<String> {
     let template = Buckets { username: "Ashu" };
     Html(template.render().unwrap())

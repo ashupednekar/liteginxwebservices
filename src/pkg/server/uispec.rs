@@ -2,10 +2,6 @@ use askama::Template;
 use serde::Serialize;
 
 #[derive(Template)]
-#[template(path = "verify.html")]
-pub struct Verify {}
-
-#[derive(Template)]
 #[template(path = "buckets.html")]
 pub struct Buckets<'a> {
     pub username: &'a str,
@@ -44,4 +40,10 @@ pub struct Home<'a> {
     pub username: &'a str,
     pub projects: Vec<Project<'a>>,
     pub metrics: Metrics,
+}
+
+#[derive(Template)]
+#[template(path = "verify.html")]
+pub struct Verify<'a> {
+    pub email: &'a str,
 }
