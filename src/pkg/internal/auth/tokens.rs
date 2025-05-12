@@ -5,18 +5,13 @@ use crate::{
 
 use askama::Template;
 use axum::http::StatusCode;
-use chrono::{DateTime, Utc};
 use rand::{Rng, distr::Alphanumeric};
-use serde::Deserialize;
 use sqlx::{
-    PgPool,
     prelude::{FromRow, Type},
-    query,
     types::time::OffsetDateTime,
 };
 use standard_error::{HtmlRes, StandardError, Status};
 use uuid::Uuid;
-use validator::Validate;
 
 #[derive(Debug, Type)]
 #[sqlx(type_name = "token_status", rename_all = "lowercase")]
@@ -29,7 +24,7 @@ pub enum TokenStatus {
 #[derive(FromRow, Debug)]
 pub struct AuthToken {
     pub token: Uuid,
-    pub user_id: Uuid,
+    pub user_id: String,
     pub code: String,
     pub expiry: OffsetDateTime,
     pub status: TokenStatus,
@@ -37,8 +32,9 @@ pub struct AuthToken {
 
 #[derive(FromRow, Debug)]
 pub struct User {
-    pub email: String,
     pub user_id: String,
+    pub email: String,
+    pub name: Option<String>,
 }
 
 impl AuthToken {
@@ -50,30 +46,30 @@ impl AuthToken {
             .collect()
     }
 
-    pub async fn issue(state: AppState, email: Option<&str>, username: Option<&str>) -> Result<()> {
+    pub async fn issue(state: AppState, email: &str, name: &str) -> Result<User> {
         let pool = &*state.db_pool;
-        let email = email.ok_or_else(|| StandardError::new("ERR-AUTH-003"))?;
         let maybe_user = sqlx::query_as!(
-            User,
-            r#"
-            INSERT INTO users (email, username)
-            VALUES ($1, $2)
-            ON CONFLICT (email) DO NOTHING
-            RETURNING email, user_id
-            "#,
-            email,
-            username
-        )
-        .fetch_optional(pool)
-        .await?;
-
+                User,
+                r#"SELECT user_id, email, name FROM users WHERE email = $1"#,
+                email
+            )
+            .fetch_optional(pool)
+            .await?;
         let user = match maybe_user {
             Some(user) => user,
             None => {
+                let user_id = Uuid::new_v4().to_string();
                 match sqlx::query_as!(
                     User,
-                    r#"SELECT user_id, email FROM users WHERE email = $1"#,
-                    email
+                    r#"
+                    INSERT INTO users (user_id, email, name)
+                    VALUES ($1, $2, $3)
+                    ON CONFLICT (email) DO NOTHING
+                    RETURNING user_id, email, name 
+                    "#,
+                    user_id,
+                    email,
+                    name
                 )
                 .fetch_optional(pool)
                 .await?
@@ -94,9 +90,7 @@ impl AuthToken {
             INSERT INTO tokens (user_id, code, expiry, status)
             VALUES ($1, $2, NOW() + interval '1 hour', $3)
             "#,
-            user.user_id
-                .parse::<Uuid>()
-                .map_err(|_| StandardError::new("ERR-AUTH-002"))?,
+            user.user_id,
             code,
             TokenStatus::Pending as _
         )
@@ -104,17 +98,17 @@ impl AuthToken {
         .await?;
 
         tracing::info!("Issued token for user {}", user.user_id);
-        Err(StandardError::new("ERR-AUTH-001")
-            .code(StatusCode::UNAUTHORIZED)
-            .template(Verify { email }.render()?))
+        Ok(user)
     }
 
-    pub async fn verify(
+    pub async fn check_code(token: AuthToken, code: &str) -> Result<()>{
+        if token.code == code {Ok(())} else {Err(StandardError::new("ERR-AUTH-003"))}
+    }
+
+    pub async fn check_token_validity(
         state: AppState,
         token_str: &str,
-        email: Option<&str>,
-        username: Option<&str>,
-    ) -> Result<()> {
+    ) -> Result<User> {
         let pool = &*state.db_pool;
         let token_str = token_str
             .parse::<Uuid>()
@@ -131,17 +125,18 @@ impl AuthToken {
             &token_str
         )
         .fetch_optional(pool)
-        .await?;
-
-        match result {
-            Some(token) => {
-                if let TokenStatus::Verified = token.status {
-                    Ok(())
-                } else {
-                    AuthToken::issue(state, email, username).await
-                }
-            }
-            None => AuthToken::issue(state, email, username).await,
+        .await;
+        if let Ok(Some(token)) = result{
+             let user = sqlx::query_as!(
+                    User,
+                    r#"SELECT user_id, email, name FROM users WHERE user_id = $1"#,
+                    token.user_id 
+                )
+                .fetch_one(pool)
+                .await?;
+            Ok(user)
+        }else{
+            Err(StandardError::new("ERR-AUTH-001"))
         }
     }
 }
@@ -161,11 +156,9 @@ mod tests {
     async fn test_verify() -> Result<()> {
         let state = AppState::new().await?;
         let token = Uuid::new_v4();
-        let _ = AuthToken::verify(
+        let _ = AuthToken::check_token_validity(
             state,
             &token.to_string(),
-            Some("ashupednekar49@gmail.com"),
-            Some("username"),
         )
         .await;
         Ok(())

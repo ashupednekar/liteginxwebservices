@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS users (
-    username VARCHAR(50) PRIMARY KEY,
+    user_id VARCHAR(50) PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
     name VARCHAR(100),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -18,5 +18,5 @@ CREATE UNLOGGED TABLE IF NOT EXISTS tokens (
     code VARCHAR(6) NOT NULL,
     expiry TIMESTAMPTZ NOT NULL,
     status token_status NOT NULL DEFAULT 'pending',
-    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(username) ON DELETE CASCADE
+    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
