@@ -8,15 +8,16 @@ use axum::{
     response::Response,
 };
 use axum_extra::extract::CookieJar;
-use sqlx::query;
 use standard_error::{HtmlRes, StandardError, Status};
 
 use crate::{
-    pkg::server::{state::AppState, uispec::Verify},
+    pkg::{
+        internal::auth::tokens::AuthToken,
+        server::{state::AppState, uispec::Verify},
+    },
     prelude::Result,
 };
 
-#[derive(Debug)]
 pub struct UserDetails {
     pub username: String,
 }
@@ -27,24 +28,31 @@ pub async fn authenticate(
     mut request: Request,
     next: Next,
 ) -> Result<Response> {
-    let email = "ashupednekar49@gmail.com";
-    match CookieJar::from_headers(&headers)
-        .get("_Host_lwsuser")
-        .filter(|c| !c.value().is_empty())
-    {
-        Some(token) => {
-            
+    let email = headers.get("_Host_lws_email").and_then(|v|v.to_str().ok());
+    let username = headers.get("_Host_lws_username").and_then(|v|v.to_str().ok());
+    let jar = CookieJar::from_headers(&headers);
+    let maybe_cookie = jar.get("_Host_lws_token").filter(|c| !c.value().is_empty());
+
+    if let Some(cookie) = maybe_cookie {
+        match AuthToken::verify(state.clone(), cookie.value(), email, username).await {
+            Ok(_) => {
+                let details = UserDetails {
+                    username: username.unwrap().into(),
+                };
+                request.extensions_mut().insert(Arc::new(details));
+                return Ok(next.run(request).await);
+            }
+            Err(_) => {
+                return Err(StandardError::new("ERR-AUTH-001")
+                    .code(StatusCode::UNAUTHORIZED)
+                    .template(Verify { email: email.unwrap() }.render()?));
+            }
         }
-        None => {
-            tracing::debug!("token missing, autentication denied");
-            return Err(StandardError::new("ERR-AUTH-001")
-                .code(StatusCode::UNAUTHORIZED)
-                .template(Verify { email }.render()?));
-        }
-    };
-    let details = UserDetails {
-        username: "ashupednekar".into(),
-    };
-    request.extensions_mut().insert(Arc::new(details));
-    Ok(next.run(request).await)
+    }
+
+    tracing::debug!("token missing, authentication denied");
+    AuthToken::issue(state, email, username).await?;
+    Err(StandardError::new("ERR-AUTH-001")
+        .code(StatusCode::UNAUTHORIZED)
+        .template(Verify { email: email.unwrap() }.render()?))
 }

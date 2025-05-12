@@ -1,3 +1,5 @@
 errors:
   - code: ERR-AUTH-001
     detail_en_US: "Authentication required"
+  - code: ERR-AUTH-002
+    detail_en_US: "Token string not a valid uuid"

@@ -1,17 +1,22 @@
-CREATE TABLE users (
-    user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    username VARCHAR(50) NOT NULL UNIQUE,
+CREATE TABLE IF NOT EXISTS users (
+    username VARCHAR(50) PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
     name VARCHAR(100),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TYPE token_status AS ENUM ('pending', 'verified', 'expired');
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'token_status') THEN
+        CREATE TYPE token_status AS ENUM ('pending', 'verified', 'expired');
+    END IF;
+END$$;
 
-CREATE UNLOGGED TABLE tokens (
+CREATE UNLOGGED TABLE IF NOT EXISTS tokens (
     token UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES users(user_id) ON DELETE CASCADE,
+    user_id VARCHAR(50) NOT NULL,
     code VARCHAR(6) NOT NULL,
-    expiry TIMESTAMP NOT NULL,
-    status token_status NOT NULL DEFAULT 'pending'
+    expiry TIMESTAMPTZ NOT NULL,
+    status token_status NOT NULL DEFAULT 'pending',
+    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(username) ON DELETE CASCADE
 );
