@@ -1,14 +1,14 @@
 CREATE TABLE IF NOT EXISTS users (
     user_id VARCHAR(50) PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
-    name VARCHAR(100),
+    name VARCHAR(100) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'token_status') THEN
-        CREATE TYPE token_status AS ENUM ('pending', 'verified', 'expired');
+        CREATE TYPE token_status AS ENUM ('pending', 'verified', 'expired', 'rejected');
     END IF;
 END$$;
 

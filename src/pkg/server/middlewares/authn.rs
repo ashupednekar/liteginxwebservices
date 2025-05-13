@@ -12,12 +12,11 @@ use standard_error::{HtmlRes, StandardError, Status};
 
 use crate::{
     pkg::{
-        internal::auth::tokens::AuthToken,
+        internal::auth::tokens::{AuthToken, User},
         server::{state::AppState, uispec::Verify},
     },
     prelude::Result,
 };
-
 
 pub async fn authenticate(
     State(state): State<AppState>,
@@ -33,16 +32,20 @@ pub async fn authenticate(
                 request.extensions_mut().insert(Arc::new(user));
                 return Ok(next.run(request).await);
             }
-            Err(_) => {
-                tracing::warn!("token not valid, authentication denied");
-                return Err(StandardError::new("ERR-AUTH-001")
-                    .code(StatusCode::UNAUTHORIZED)
-                    .template(Verify { }.render()?));
-            }
+            Err(_) => {}
         }
     }
     tracing::warn!("token missing, authentication denied");
+    if let Some(email) = jar.get("_Host_lws_email").filter(|c| !c.value().is_empty()){
+        if let Some(user) = sqlx::query_as!(
+            User,
+            "select user_id, email, name from users where email = $1",
+            email.value()
+        ).fetch_optional(&*state.db_pool).await?{
+            user.issue_token(state).await?;
+        };
+    }
     Err(StandardError::new("ERR-AUTH-001")
         .code(StatusCode::UNAUTHORIZED)
-        .template(Verify { }.render()?))
+        .template(Verify {}.render()?))
 }

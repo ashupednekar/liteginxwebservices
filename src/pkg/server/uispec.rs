@@ -44,5 +44,4 @@ pub struct Home<'a> {
 
 #[derive(Template)]
 #[template(path = "verify.html")]
-pub struct Verify{
-}
+pub struct Verify {}

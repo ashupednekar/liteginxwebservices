@@ -1,2 +1,2 @@
 pub mod sender;
-mod spec;
+pub mod spec;
