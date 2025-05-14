@@ -1,5 +1,8 @@
 use crate::{
-    pkg::{internal::auth::email::{sender::SendEmail, spec::AuthnCodeTemplate}, server::state::AppState},
+    pkg::{
+        internal::email::{AuthnCodeTemplate, SendEmail},
+        server::state::AppState,
+    },
     prelude::Result,
 };
 
@@ -37,11 +40,11 @@ pub struct User {
     pub name: String,
 }
 
-impl User{
+impl User {
     pub async fn issue_token(&self, state: AppState) -> Result<()> {
         let pool = &*state.db_pool;
         let code = AuthToken::generate_code();
-            tracing::debug!("issued code: {}", &code);
+        tracing::debug!("issued code: {}", &code);
         sqlx::query!(
             r#"
             INSERT INTO tokens (user_id, code, expiry, status)
@@ -53,13 +56,13 @@ impl User{
         )
         .execute(pool)
         .await?;
-        AuthnCodeTemplate{
+        AuthnCodeTemplate {
             name: &self.name,
-            code: &code
-        }.send(&self.email)?;
+            code: &code,
+        }
+        .send(&self.email)?;
         Ok(())
     }
-
 }
 
 impl AuthToken {
@@ -133,6 +136,7 @@ impl AuthToken {
             FROM tokens
             WHERE token = $1
             AND status = $2
+            AND expiry > now()
             "#,
             &token_str,
             &TokenStatus::Verified as _
@@ -160,7 +164,7 @@ mod tests {
     use uuid::Uuid;
 
     use crate::{
-        pkg::{internal::auth::tokens::AuthToken, server::state::AppState},
+        pkg::{internal::auth::AuthToken, server::state::AppState},
         prelude::Result,
     };
 

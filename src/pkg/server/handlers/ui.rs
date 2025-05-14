@@ -3,7 +3,10 @@ use axum::response::Html;
 use standard_error::{Interpolate, StandardError};
 
 use crate::{
-    pkg::server::uispec::{Buckets, Containers, Functions, Home, Metrics, Project, Verify},
+    pkg::{
+        internal::project::Project,
+        server::uispec::{Buckets, Containers, Functions, Home, Metrics, Verify},
+    },
     prelude::Result,
 };
 
@@ -23,23 +26,7 @@ pub async fn functions() -> Html<String> {
 }
 
 pub async fn home() -> Result<Html<String>> {
-    let projects = vec![
-        Project {
-            id: "b7e8a1c2-1111-4a2b-8c3d-1234567890ab".to_string(),
-            name: "DevProj1",
-            description: Some("dummy proj 1"),
-        },
-        Project {
-            id: "b7e8a1c2-2222-4a2b-8c3d-1234567890ab".to_string(),
-            name: "E-commerce",
-            description: Some("API services for e-commerce platform"),
-        },
-        Project {
-            id: "b7e8a1c2-3333-4a2b-8c3d-1234567890ab".to_string(),
-            name: "Retail",
-            description: Some("retail services"),
-        },
-    ];
+    let projects = vec![];
 
     let metrics = Metrics {
         containers: 2,

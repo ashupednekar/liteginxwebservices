@@ -1,2 +1,3 @@
 pub mod auth;
-pub mod vcs;
+pub mod email;
+pub mod project;

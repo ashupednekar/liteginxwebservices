@@ -4,15 +4,15 @@ use axum::{
     Extension, Form,
     extract::State,
     http::{HeaderMap, HeaderValue, header::SET_COOKIE},
-    response::{AppendHeaders, Html, IntoResponse},
+    response::{Html, IntoResponse},
 };
-use axum_extra::extract::{CookieJar, cookie::Cookie};
+use axum_extra::extract::CookieJar;
 use serde::Deserialize;
 use validator::Validate;
 
 use crate::{
     pkg::{
-        internal::auth::tokens::{AuthToken, TokenStatus, User},
+        internal::auth::{AuthToken, TokenStatus, User},
         server::state::AppState,
     },
     prelude::Result,
@@ -45,10 +45,11 @@ pub async fn signup(
 
 pub async fn logout(
     State(state): State<AppState>,
-    Extension(user): Extension<Arc<User>>
-) -> Result<Html<String>>{
+    Extension(user): Extension<Arc<User>>,
+) -> Result<Html<String>> {
     sqlx::query!(
-        "update tokens set status = $1 where user_id = $2",
+        "update tokens set status = $2 where user_id = $3 and status = $1",
+        TokenStatus::Verified as _,
         TokenStatus::Expired as _,
         user.user_id
     )
@@ -96,7 +97,8 @@ pub async fn verify(
         if let Some(token) = token {
             if input.code != token.code {
                 sqlx::query!(
-                    "update tokens set status = $1 where user_id = $2",
+                    "update tokens set status = $2 where user_id = $3 and status = $1",
+                    TokenStatus::Pending as _,
                     TokenStatus::Rejected as _,
                     user.user_id
                 )
@@ -107,7 +109,8 @@ pub async fn verify(
             )));
             } else {
                 sqlx::query!(
-                    "update tokens set status = $1 where user_id = $2",
+                    "UPDATE tokens SET status = $2 WHERE user_id = $3 AND status = $1",
+                    TokenStatus::Pending as _,
                     TokenStatus::Verified as _,
                     user.user_id
                 )

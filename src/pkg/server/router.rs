@@ -2,7 +2,7 @@ use axum::middleware::from_fn_with_state;
 use axum::routing::post;
 use axum::{Router, routing::get};
 
-use super::handlers::auth::{signup, verify, logout};
+use super::handlers::auth::{logout, signup, verify};
 use super::handlers::probes::{healthz, livez};
 use super::handlers::ui::{buckets, containers, functions, home};
 use super::middlewares::authn;

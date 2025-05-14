@@ -1750,6 +1750,7 @@ dependencies = [
  "chrono",
  "clap",
  "config 0.15.11",
+ "futures",
  "humantime",
  "lazy_static",
  "lettre",

@@ -1,6 +1,8 @@
 use askama::Template;
 use serde::Serialize;
 
+use crate::pkg::internal::project::Project;
+
 #[derive(Template)]
 #[template(path = "buckets.html")]
 pub struct Buckets<'a> {
@@ -20,13 +22,6 @@ pub struct Functions<'a> {
 }
 
 #[derive(Debug, Serialize)]
-pub struct Project<'a> {
-    pub id: String,
-    pub name: &'a str,
-    pub description: Option<&'a str>,
-}
-
-#[derive(Debug, Serialize)]
 pub struct Metrics {
     pub containers: i32,
     pub functions: i32,
@@ -38,7 +33,7 @@ pub struct Metrics {
 #[template(path = "home.html")]
 pub struct Home<'a> {
     pub username: &'a str,
-    pub projects: Vec<Project<'a>>,
+    pub projects: Vec<Project>,
     pub metrics: Metrics,
 }
 
