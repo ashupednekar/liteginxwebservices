@@ -34,7 +34,7 @@ pub async fn signup(
     State(state): State<AppState>,
     Form(input): Form<SignupInput>,
 ) -> Result<impl IntoResponse> {
-    let user = AuthToken::issue_user_token(state, &input.email, &input.name).await?;
+    let user = AuthToken::issue_user_token(&state, &input.email, &input.name).await?;
     let mut headers = HeaderMap::new();
     headers.insert(
         SET_COOKIE,

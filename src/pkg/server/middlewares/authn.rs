@@ -27,7 +27,7 @@ pub async fn authenticate(
     let jar = CookieJar::from_headers(&headers);
     let maybe_cookie = jar.get("_Host_lws_token").filter(|c| !c.value().is_empty());
     if let Some(cookie) = maybe_cookie {
-        match AuthToken::check_token_validity(state.clone(), cookie.value()).await {
+        match AuthToken::check_token_validity(&state, cookie.value()).await {
             Ok(user) => {
                 request.extensions_mut().insert(Arc::new(user));
                 return Ok(next.run(request).await);
@@ -45,7 +45,7 @@ pub async fn authenticate(
         .fetch_optional(&*state.db_pool)
         .await?
         {
-            user.issue_token(state).await?;
+            user.issue_token(&state).await?;
         };
     }
     Err(StandardError::new("ERR-AUTH-001")

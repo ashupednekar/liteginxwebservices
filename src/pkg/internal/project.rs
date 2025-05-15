@@ -29,7 +29,7 @@ pub struct Access {
 }
 
 impl Project {
-    pub async fn create(state: Arc<AppState>, name: &str, description: &str) -> Result<Self> {
+    pub async fn create(state: &AppState, name: &str, description: &str) -> Result<Self> {
         let project = sqlx::query_as!(
             Project,
             r#"
@@ -46,7 +46,7 @@ impl Project {
         Ok(project)
     }
 
-    pub async fn list(state: Arc<AppState>) -> Result<Vec<Self>> {
+    pub async fn list(state: &AppState) -> Result<Vec<Self>> {
         let projects = sqlx::query_as!(
             Project,
             "select project_id, name, description from projects"
@@ -56,7 +56,7 @@ impl Project {
         Ok(projects)
     }
 
-    pub async fn retrieve(state: Arc<AppState>, project_id: &str) -> Result<Self> {
+    pub async fn retrieve(state: &AppState, project_id: &str) -> Result<Self> {
         let project = sqlx::query_as!(
             Project,
             "select project_id, name, description from projects where project_id = $1",
@@ -67,7 +67,7 @@ impl Project {
         Ok(project)
     }
 
-    pub async fn delete(&self, state: Arc<AppState>) -> Result<()> {
+    pub async fn delete(&self, state: &AppState) -> Result<()> {
         sqlx::query!(
             "delete from project_access where project_id = $1",
             &self.project_id
@@ -84,7 +84,7 @@ impl Project {
     }
 
 
-    pub async fn invite(&self, state: Arc<AppState>, user_id: &str) -> Result<String> {
+    pub async fn invite(&self, state: &AppState, user_id: &str) -> Result<String> {
         let invite_code = sqlx::query_scalar!(
             r#"
             insert into project_access (project_id, user_id, expiry)
@@ -101,7 +101,7 @@ impl Project {
         Ok(invite_code)
     }
 
-    pub async fn accept(&self, state: Arc<AppState>, invite_code: &str) -> Result<()>{
+    pub async fn accept_invite(state: &AppState, invite_code: &str) -> Result<()>{
         match sqlx::query!(
             "update project_access set status = $2 where invite_id = $1 and expiry > NOW()",
             &invite_code,
@@ -117,17 +117,33 @@ impl Project {
 #[cfg(test)]
 mod tests{
     use tracing_test::traced_test;
+    use crate::pkg::internal::auth::User;
+
     use super::*;
 
     #[tokio::test]
     #[traced_test]
     async fn test_project_crud() -> Result<()>{
+        let state = AppState::new().await?;
+        Project::create(&state, "proj1", "first project").await?;
+        Project::create(&state, "proj2", "second project").await?;
+        Project::create(&state, "proj3", "third project").await?;
+        let projects = Project::list(&state).await?;
+        assert_eq!(projects.len(), 3);
+        let project_id = projects[0].project_id.clone();
+        let project = Project::retrieve(&state, &project_id).await?;
+        project.delete(&state).await?;
         Ok(())
     }
 
     #[tokio::test]
     #[traced_test]
     async fn test_project_invite_accept() -> Result<()>{
+        let state = AppState::new().await?;
+        let user = User::create(&state, "ashupednekar49@gmail.com", "Ashu Pednekar").await?;
+        let project = Project::create(&state, "proj", "project description").await?;
+        let invite_code = project.invite(&state, &user.user_id).await?;
+        Project::accept_invite(&state, &invite_code).await?;
         Ok(())
     }
 

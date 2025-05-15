@@ -5,7 +5,7 @@ use crate::{
     },
     prelude::Result,
 };
-
+use std::sync::Arc;
 use axum::http::StatusCode;
 use rand::{Rng, distr::Alphanumeric};
 use sqlx::{
@@ -41,7 +41,26 @@ pub struct User {
 }
 
 impl User {
-    pub async fn issue_token(&self, state: AppState) -> Result<()> {
+
+    pub async fn create(state: &AppState, email: &str, name: &str) -> Result<Self>{
+        let user = sqlx::query_as!(
+            User,
+            r#"
+            INSERT INTO users (email, name)
+            VALUES ($1, $2)
+            ON CONFLICT (email) DO update
+            set name = $2
+            RETURNING user_id, email, name 
+            "#,
+            email,
+            name
+        )
+        .fetch_one(&*state.db_pool)
+        .await?;
+        Ok(user)
+    }
+
+    pub async fn issue_token(&self, state: &AppState) -> Result<()> {
         let pool = &*state.db_pool;
         let code = AuthToken::generate_code();
         tracing::debug!("issued code: {}", &code);
@@ -74,42 +93,8 @@ impl AuthToken {
             .collect()
     }
 
-    pub async fn issue_user_token(state: AppState, email: &str, name: &str) -> Result<User> {
-        let pool = &*state.db_pool;
-        let maybe_user = sqlx::query_as!(
-            User,
-            r#"SELECT user_id, email, name FROM users WHERE email = $1"#,
-            email
-        )
-        .fetch_optional(pool)
-        .await?;
-        let user = match maybe_user {
-            Some(user) => user,
-            None => {
-                let user_id = Uuid::new_v4().to_string();
-                match sqlx::query_as!(
-                    User,
-                    r#"
-                    INSERT INTO users (user_id, email, name)
-                    VALUES ($1, $2, $3)
-                    ON CONFLICT (email) DO NOTHING
-                    RETURNING user_id, email, name 
-                    "#,
-                    user_id,
-                    email,
-                    name
-                )
-                .fetch_optional(pool)
-                .await?
-                {
-                    Some(user) => user,
-                    None => {
-                        return Err(StandardError::new("ERR-AUTH-004")
-                            .code(StatusCode::INTERNAL_SERVER_ERROR));
-                    }
-                }
-            }
-        };
+    pub async fn issue_user_token(state: &AppState, email: &str, name: &str) -> Result<User> {
+        let user = User::create(&state, email, name).await?;
         user.issue_token(state).await?;
         Ok(user)
     }
@@ -122,7 +107,7 @@ impl AuthToken {
         }
     }
 
-    pub async fn check_token_validity(state: AppState, token_str: &str) -> Result<User> {
+    pub async fn check_token_validity(state: &AppState, token_str: &str) -> Result<User> {
         let pool = &*state.db_pool;
         let token_str = token_str
             .parse::<Uuid>()
