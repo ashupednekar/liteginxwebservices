@@ -129,7 +129,7 @@ pub async fn verify(
                 ))
             }
         } else {
-            user.issue_token(state).await?;
+            user.issue_token(&state).await?;
             Ok((
                 headers,
                 Html(

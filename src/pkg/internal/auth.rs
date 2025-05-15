@@ -46,14 +46,15 @@ impl User {
         let user = sqlx::query_as!(
             User,
             r#"
-            INSERT INTO users (email, name)
-            VALUES ($1, $2)
+            INSERT INTO users (email, name, user_id)
+            VALUES ($1, $2, $3)
             ON CONFLICT (email) DO update
             set name = $2
             RETURNING user_id, email, name 
             "#,
             email,
-            name
+            name,
+            Uuid::new_v4().to_string()
         )
         .fetch_one(&*state.db_pool)
         .await?;
@@ -95,7 +96,7 @@ impl AuthToken {
 
     pub async fn issue_user_token(state: &AppState, email: &str, name: &str) -> Result<User> {
         let user = User::create(&state, email, name).await?;
-        user.issue_token(state).await?;
+        user.issue_token(&state).await?;
         Ok(user)
     }
 
@@ -158,7 +159,7 @@ mod tests {
     async fn test_verify() -> Result<()> {
         let state = AppState::new().await?;
         let token = Uuid::new_v4();
-        let _ = AuthToken::check_token_validity(state, &token.to_string()).await;
+        let _ = AuthToken::check_token_validity(&state, &token.to_string()).await;
         Ok(())
     }
 }

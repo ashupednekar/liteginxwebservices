@@ -6,6 +6,7 @@ use serde::Serialize;
 use sqlx::prelude::{FromRow, Type};
 use standard_error::StandardError;
 use tokio::try_join;
+use uuid::Uuid;
 
 #[derive(Debug, Type)]
 #[sqlx(type_name = "invite_status", rename_all = "lowercase")]
@@ -33,13 +34,14 @@ impl Project {
         let project = sqlx::query_as!(
             Project,
             r#"
-            INSERT INTO projects (name, description)
-            VALUES ($1, $2)
+            INSERT INTO projects (name, description, project_id)
+            VALUES ($1, $2, $3)
             ON CONFLICT (name) DO NOTHING
             RETURNING project_id, name, description
             "#,
             name,
-            description
+            description,
+            Uuid::new_v4().to_string()
         )
         .fetch_one(&*state.db_pool)
         .await?;
@@ -125,11 +127,12 @@ mod tests{
     #[traced_test]
     async fn test_project_crud() -> Result<()>{
         let state = AppState::new().await?;
+        let before = Project::list(&state).await?.len();
         Project::create(&state, "proj1", "first project").await?;
         Project::create(&state, "proj2", "second project").await?;
         Project::create(&state, "proj3", "third project").await?;
         let projects = Project::list(&state).await?;
-        assert_eq!(projects.len(), 3);
+        assert_eq!(projects.len() - before, 3);
         let project_id = projects[0].project_id.clone();
         let project = Project::retrieve(&state, &project_id).await?;
         project.delete(&state).await?;
