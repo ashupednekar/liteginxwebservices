@@ -67,41 +67,6 @@ impl Project {
         Ok(project)
     }
 
-    pub async fn assign(&self, state: Arc<AppState>, users: Vec<&str>) -> Result<()> {
-        let futures = users.iter().map(|user_id| {
-            sqlx::query!(
-                r#"
-                INSERT INTO project_access (project_id, user_id)
-                VALUES ($1, $2)
-                on conflict (project_id, user_id) do nothing
-                "#,
-                self.project_id,
-                *user_id
-            )
-            .execute(&*state.db_pool)
-        });
-        try_join_all(futures).await?;
-        Ok(())
-    }
-
-
-    pub async fn unassign(&self, state: Arc<AppState>, users: Vec<&str>) -> Result<()> {
-        let futures = users.iter().map(|user_id| {
-            sqlx::query!(
-                r#"
-                delete from project_access
-                where project_id = $1 and user_id = $2
-                "#,
-                self.project_id,
-                *user_id
-            )
-            .execute(&*state.db_pool)
-        });
-        try_join_all(futures).await?;
-        Ok(())
-    }
-
-
     pub async fn delete(&self, state: Arc<AppState>) -> Result<()> {
         sqlx::query!(
             "delete from project_access where project_id = $1",
@@ -115,6 +80,61 @@ impl Project {
         )
         .execute(&*state.db_pool)
         .await?;
+        Ok(())
+    }
+
+
+    pub async fn invite(&self, state: Arc<AppState>, user_id: &str) -> Result<String> {
+        let invite_code = sqlx::query_scalar!(
+            r#"
+            insert into project_access (project_id, user_id, expiry)
+            values ($1, $2, NOW() + interval '1 hour')
+            on conflict (project_id, user_id) do update 
+            set expiry = NOW() + INTERVAL '1 hour'
+            returning invite_id
+            "#,
+            &self.project_id,
+            user_id
+        )
+        .fetch_one(&*state.db_pool)
+        .await?;
+        Ok(invite_code)
+    }
+
+    pub async fn accept(&self, state: Arc<AppState>, invite_code: &str) -> Result<()>{
+        match sqlx::query!(
+            "update project_access set status = $2 where invite_id = $1 and expiry > NOW()",
+            &invite_code,
+            InviteStatus::Accepted as _
+        ).fetch_optional(&*state.db_pool).await?{
+            Some(_) => {},
+            None => {return Err(StandardError::new("ERR-INVITE-EXPIRED"));}
+        }
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests{
+    use tracing_test::traced_test;
+    use super::*;
+
+    #[tokio::test]
+    #[traced_test]
+    async fn test_project_crud() -> Result<()>{
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[traced_test]
+    async fn test_project_invite_accept() -> Result<()>{
+        Ok(())
+    }
+
+
+    #[tokio::test]
+    #[traced_test]
+    async fn test_project_invite_expiry() -> Result<()>{
         Ok(())
     }
 }
