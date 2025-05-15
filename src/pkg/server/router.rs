@@ -2,6 +2,7 @@ use axum::middleware::from_fn_with_state;
 use axum::routing::post;
 use axum::{Router, routing::get};
 
+use super::handlers;
 use super::handlers::auth::{logout, signup, verify};
 use super::handlers::probes::{healthz, livez};
 use super::handlers::ui::{buckets, containers, functions, home};
@@ -17,6 +18,8 @@ pub async fn build_routes() -> Result<Router> {
         .route("/containers", get(containers))
         .route("/functions", get(functions))
         .route("/logout", post(logout))
+        .route("/project", post(handlers::project::create))
+        .route("/project/invite", post(handlers::project::invite))
         .layer(from_fn_with_state(state.clone(), authn::authenticate))
         .route("/signup", post(signup))
         .route("/verify", post(verify))

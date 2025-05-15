@@ -61,6 +61,17 @@ impl User {
         Ok(user)
     }
 
+    pub async fn retrieve(state: &AppState, email: &str) -> Result<Option<Self>>{
+        Ok(sqlx::query_as!(
+            User,
+            r#"
+            select user_id, email, name from users
+            where email = $1
+            "#,
+            &email
+        ).fetch_optional(&*state.db_pool).await?)
+    }
+
     pub async fn issue_token(&self, state: &AppState) -> Result<()> {
         let pool = &*state.db_pool;
         let code = AuthToken::generate_code();

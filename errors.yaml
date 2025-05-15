@@ -5,3 +5,5 @@ errors:
     detail_en_US: "Token string not a valid uuid"
   - code: ERR-AUTH-003
     detail_en_US: "Invalid code"
+  - code: ERR-PROJ-001
+    detail_en_US: "Invalid code"

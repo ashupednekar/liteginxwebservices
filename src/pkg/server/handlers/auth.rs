@@ -40,6 +40,10 @@ pub async fn signup(
         SET_COOKIE,
         HeaderValue::from_str(&format!("_Host_lws_email={}", &user.email))?,
     );
+    headers.insert(
+        "HX-Redirect",
+        HeaderValue::from_str("/otp")?,
+    );
     Ok(headers)
 }
 

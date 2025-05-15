@@ -1,11 +1,7 @@
-use std::sync::Arc;
-
 use crate::{pkg::server::state::AppState, prelude::Result};
-use futures::future::try_join_all;
 use serde::Serialize;
 use sqlx::prelude::{FromRow, Type};
 use standard_error::StandardError;
-use tokio::try_join;
 use uuid::Uuid;
 
 #[derive(Debug, Type)]
@@ -89,12 +85,13 @@ impl Project {
     pub async fn invite(&self, state: &AppState, user_id: &str) -> Result<String> {
         let invite_code = sqlx::query_scalar!(
             r#"
-            insert into project_access (project_id, user_id, expiry)
-            values ($1, $2, NOW() + interval '1 hour')
+            insert into project_access (invite_id, project_id, user_id, expiry)
+            values ($1, $2, $3, NOW() + interval '1 hour')
             on conflict (project_id, user_id) do update 
             set expiry = NOW() + INTERVAL '1 hour'
             returning invite_id
             "#,
+            Uuid::new_v4().to_string(),
             &self.project_id,
             user_id
         )

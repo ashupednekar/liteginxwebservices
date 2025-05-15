@@ -1,11 +1,11 @@
 use askama::Template;
-use axum::response::Html;
+use axum::{extract::State, response::Html};
 use standard_error::{Interpolate, StandardError};
 
 use crate::{
     pkg::{
         internal::project::Project,
-        server::uispec::{Buckets, Containers, Functions, Home, Metrics, Verify},
+        server::{state::AppState, uispec::{Buckets, Containers, Functions, Home, Metrics, Verify}},
     },
     prelude::Result,
 };
@@ -25,9 +25,11 @@ pub async fn functions() -> Html<String> {
     Html(template.render().unwrap())
 }
 
-pub async fn home() -> Result<Html<String>> {
-    let projects = vec![];
-
+pub async fn home(
+    State(state): State<AppState>
+) ->Result<Html<String>> {
+    let projects = Project::list(&state).await?;
+    tracing::debug!("projects: {:?}", &projects);
     let metrics = Metrics {
         containers: 2,
         functions: 5,
