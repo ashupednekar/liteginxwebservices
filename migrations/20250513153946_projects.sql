@@ -15,6 +15,7 @@ END $$;
 CREATE TABLE IF NOT EXISTS project_access (
     invite_id VARCHAR(50) PRIMARY KEY,
     user_id VARCHAR(50) NOT NULL,
+    inviter_id VARCHAR(50) NOT NULL,
     project_id VARCHAR(50) NOT NULL,
     status invite_status NOT NULL DEFAULT 'pending',
     expiry TIMESTAMPTZ NOT NULL,

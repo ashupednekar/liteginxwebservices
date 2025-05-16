@@ -25,7 +25,7 @@ pub async fn create(
     Form(input): Form<ProjectInput>,
 ) ->Result<Json<Project>>{
     let project = Project::create(&state, &input.name, &input.description).await?;
-    let code = project.invite(&state, &user.user_id).await?;
+    let code = project.invite(&state, &user.user_id, &user.user_id).await?;
     Project::accept_invite(&state, &code).await?;
     Ok(Json(project))
 }
@@ -40,7 +40,8 @@ pub struct InviteInput{
 pub async fn invite(
     State(state): State<AppState>,
     headers: HeaderMap,
-    Form(input): Form<InviteInput>
+    Extension(me): Extension<Arc<User>>,
+    Json(input): Json<InviteInput>
 ) -> Result<Json<Value>>{
     let jar = CookieJar::from_headers(&headers);
     let project_id = match jar.get("current_project").filter(|c| !c.value().is_empty()){
@@ -55,7 +56,8 @@ pub async fn invite(
             User::create(&state, &input.email, &name).await?
         }
     };
-    let code = project.invite(&state, &user.user_id).await?;
+    tracing::info!("inviting {} to {}", &user.name, &project.name);
+    let code = project.invite(&state, &user.user_id, &me.user_id).await?;
     Ok(Json(json!({
         "code": code
     })))

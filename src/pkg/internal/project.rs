@@ -1,4 +1,4 @@
-use crate::{pkg::server::state::AppState, prelude::Result};
+use crate::{pkg::server::{state::AppState, uispec::ShowInvite}, prelude::Result};
 use serde::Serialize;
 use sqlx::prelude::{FromRow, Type};
 use standard_error::StandardError;
@@ -23,6 +23,7 @@ pub struct Project {
 pub struct Access {
     pub user_id: String,
     pub project_id: String,
+    pub inviter_id: String
 }
 
 impl Project {
@@ -81,23 +82,42 @@ impl Project {
         Ok(())
     }
 
-
-    pub async fn invite(&self, state: &AppState, user_id: &str) -> Result<String> {
+    pub async fn invite(&self, state: &AppState, user_id: &str, me: &str) -> Result<String> {
         let invite_code = sqlx::query_scalar!(
             r#"
-            insert into project_access (invite_id, project_id, user_id, expiry)
-            values ($1, $2, $3, NOW() + interval '1 hour')
+            insert into project_access (invite_id, project_id, user_id, expiry, inviter_id)
+            values ($1, $2, $3, NOW() + interval '1 hour', $4)
             on conflict (project_id, user_id) do update 
             set expiry = NOW() + INTERVAL '1 hour'
             returning invite_id
             "#,
             Uuid::new_v4().to_string(),
             &self.project_id,
-            user_id
+            user_id,
+            &me
         )
         .fetch_one(&*state.db_pool)
         .await?;
         Ok(invite_code)
+    }
+
+    pub async fn invite_details<'a>(state: &AppState, invite_id: &'a str) -> Result<(Project, String)>{
+
+        let invite = sqlx::query_as!(
+            Access,
+            "select project_id, user_id, inviter_id from project_access where invite_id = $1",
+            &invite_id
+        ).fetch_one(&*state.db_pool).await?;
+
+        let project = sqlx::query_as!(
+            Project,
+            "select project_id, name, description from projects where project_id = $1",
+            &invite.project_id
+        ).fetch_one(&*state.db_pool).await?;
+
+        let inviter = sqlx::query_scalar!("select name from users where user_id = $1", &invite.inviter_id).fetch_one(&*state.db_pool).await?;
+        
+        Ok((project, inviter))
     }
 
     pub async fn accept_invite(state: &AppState, invite_code: &str) -> Result<()>{

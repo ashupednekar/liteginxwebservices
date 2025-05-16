@@ -40,3 +40,13 @@ pub struct Home<'a> {
 #[derive(Template)]
 #[template(path = "verify.html")]
 pub struct Verify {}
+
+
+#[derive(Template, Debug)]
+#[template(path = "accept_invite.html")]
+pub struct ShowInvite<'a> {
+    pub inviter: &'a str,
+    pub project_name: &'a str,
+    pub project_description: &'a str,
+    pub invite_id: &'a str
+}

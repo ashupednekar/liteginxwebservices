@@ -1,11 +1,11 @@
 use askama::Template;
-use axum::{extract::State, response::Html};
+use axum::{extract::{Query, State}, response::Html};
 use standard_error::{Interpolate, StandardError};
 
 use crate::{
     pkg::{
         internal::project::Project,
-        server::{state::AppState, uispec::{Buckets, Containers, Functions, Home, Metrics, Verify}},
+        server::{state::AppState, uispec::{Buckets, Containers, Functions, Home, Metrics, ShowInvite, Verify}},
     },
     prelude::Result,
 };
@@ -23,6 +23,21 @@ pub async fn containers() -> Html<String> {
 pub async fn functions() -> Html<String> {
     let template = Functions { username: "Ashu" };
     Html(template.render().unwrap())
+}
+
+pub async fn show_invite(
+    Query(invite_code): Query<String>,
+    State(state): State<AppState>
+) -> Result<Html<String>>{
+    let (project, inviter) = Project::invite_details(&state, &invite_code).await?;
+    let template = ShowInvite {
+        inviter: &inviter,
+        project_name: &project.name,
+        project_description: &project.description,
+        invite_id: &invite_code
+    };
+    tracing::debug!("showing invite: {:?}", &template);
+    Ok(Html(template.render()?))
 }
 
 pub async fn home(
@@ -43,7 +58,5 @@ pub async fn home(
         metrics,
     };
 
-    Ok(Html(template.render().map_err(|e| {
-        StandardError::new("ERR-RENDER").interpolate_err(e.to_string())
-    })?))
+    Ok(Html(template.render()?))
 }
