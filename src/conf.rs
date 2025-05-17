@@ -4,6 +4,7 @@ use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
 pub struct Settings {
+    pub base_url: String,
     pub service_name: String,
     pub listen_port: String,
     pub database_url: String,

@@ -1,55 +1,67 @@
 use std::sync::Arc;
 
-use axum::{extract::State, http::HeaderMap, Extension, Form, Json};
+use axum::{
+    Extension, Form, Json,
+    extract::{Query, State},
+    http::HeaderMap,
+    response::{Html, Redirect},
+};
 use axum_extra::extract::CookieJar;
 use serde::Deserialize;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use standard_error::StandardError;
 use validator::Validate;
 
-use crate::{pkg::{internal::{auth::User, project::Project}, server::state::AppState}, prelude::Result};
-
+use crate::{
+    pkg::{
+        internal::{
+            auth::User,
+            email::SendEmail,
+            project::{AccessInvite, Project},
+        },
+        server::state::AppState,
+    },
+    prelude::Result,
+};
 
 #[derive(Deserialize, Validate)]
-pub struct ProjectInput{
+pub struct ProjectInput {
     #[validate(length(min = 1, message = "Field cannot be empty"))]
     pub name: String,
     #[validate(length(min = 1, message = "Field cannot be empty"))]
-    pub description: String
+    pub description: String,
 }
-
 
 pub async fn create(
     State(state): State<AppState>,
     Extension(user): Extension<Arc<User>>,
     Form(input): Form<ProjectInput>,
-) ->Result<Json<Project>>{
-    let project = Project::create(&state, &input.name, &input.description).await?;
-    let code = project.invite(&state, &user.user_id, &user.user_id).await?;
-    Project::accept_invite(&state, &code).await?;
-    Ok(Json(project))
+) -> Result<Redirect> {
+    Project::create(&state, &input.name, &input.description, &user.user_id).await?;
+    Ok(Redirect::permanent("/"))
 }
 
 #[derive(Deserialize, Validate)]
-pub struct InviteInput{
+pub struct InviteInput {
     #[validate(length(min = 1, message = "Field cannot be empty"))]
-    pub email: String
+    pub email: String,
 }
-
 
 pub async fn invite(
     State(state): State<AppState>,
     headers: HeaderMap,
     Extension(me): Extension<Arc<User>>,
-    Json(input): Json<InviteInput>
-) -> Result<Json<Value>>{
+    Json(input): Json<InviteInput>,
+) -> Result<Json<Value>> {
     let jar = CookieJar::from_headers(&headers);
-    let project_id = match jar.get("current_project").filter(|c| !c.value().is_empty()){
+    let project_id = match jar.get("current_project").filter(|c| !c.value().is_empty()) {
         Some(p) => p.value(),
-        None => {return Err(StandardError::new("ERR-PROJ-001"));}
+        None => {
+            return Err(StandardError::new("ERR-PROJ-001"));
+        }
     };
     let project = Project::retrieve(&state, project_id).await?;
-    let user = match User::retrieve(&state, &input.email).await?{
+    let user = match User::retrieve(&state, &input.email).await? {
         Some(u) => u,
         None => {
             let (name, _) = input.email.split_once("@").unwrap_or(("unknown", ""));
@@ -57,8 +69,26 @@ pub async fn invite(
         }
     };
     tracing::info!("inviting {} to {}", &user.name, &project.name);
-    let code = project.invite(&state, &user.user_id, &me.user_id).await?;
+    let invite = project.invite(&state, &user.user_id, &me.user_id).await?;
+    invite.details(&state).await?.send(&user.email)?;
     Ok(Json(json!({
-        "code": code
+        "code": invite.invite_id
     })))
+}
+
+
+#[derive(Deserialize)]
+pub struct AcceptQuery{
+    pub invite_code: String
+}
+
+pub async fn accept(
+    State(state): State<AppState>,
+    Query(params): Query<AcceptQuery>,
+    Extension(user): Extension<Arc<User>>,
+) -> Result<Redirect> {
+    let invite = AccessInvite::new(&state, &params.invite_code).await?;
+    invite.accept(&state).await?;
+    tracing::info!("{} accepted invite code - {}", &user.name, &params.invite_code);
+    Ok(Redirect::permanent("/"))
 }

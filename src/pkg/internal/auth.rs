@@ -1,11 +1,10 @@
 use crate::{
     pkg::{
-        internal::email::{AuthnCodeTemplate, SendEmail},
+        internal::email::{SendEmail, authtoken::AuthnCodeTemplate},
         server::state::AppState,
     },
     prelude::Result,
 };
-use std::sync::Arc;
 use axum::http::StatusCode;
 use rand::{Rng, distr::Alphanumeric};
 use sqlx::{
@@ -13,6 +12,7 @@ use sqlx::{
     types::time::OffsetDateTime,
 };
 use standard_error::{StandardError, Status};
+use std::sync::Arc;
 use uuid::Uuid;
 
 #[derive(Debug, Type)]
@@ -41,8 +41,7 @@ pub struct User {
 }
 
 impl User {
-
-    pub async fn create(state: &AppState, email: &str, name: &str) -> Result<Self>{
+    pub async fn create(state: &AppState, email: &str, name: &str) -> Result<Self> {
         let user = sqlx::query_as!(
             User,
             r#"
@@ -61,7 +60,7 @@ impl User {
         Ok(user)
     }
 
-    pub async fn retrieve(state: &AppState, email: &str) -> Result<Option<Self>>{
+    pub async fn retrieve(state: &AppState, email: &str) -> Result<Option<Self>> {
         Ok(sqlx::query_as!(
             User,
             r#"
@@ -69,7 +68,9 @@ impl User {
             where email = $1
             "#,
             &email
-        ).fetch_optional(&*state.db_pool).await?)
+        )
+        .fetch_optional(&*state.db_pool)
+        .await?)
     }
 
     pub async fn issue_token(&self, state: &AppState) -> Result<()> {

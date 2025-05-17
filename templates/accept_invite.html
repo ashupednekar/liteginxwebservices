@@ -45,25 +45,28 @@
         </div>
       </div>
 
-      <!-- Accept Button -->
-      <div class="space-y-4">
-        <button 
-          @click="acceptInvite"
-          :disabled="isLoading"
-          class="w-full py-3 px-4 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          <span x-show="!isLoading">Accept Invitation</span>
-          <span x-show="isLoading" class="flex items-center justify-center">
-            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            Accepting...
-          </span>
-        </button>
-        <p class="text-sm text-gray-500 dark:text-gray-400 text-center">
-          By accepting, you'll be added as a member of this project
-        </p>
+      <!-- Status Message -->
+      <div x-show="status" class="mt-6">
+        <div x-show="status === 'success'" class="bg-green-50 dark:bg-green-900/50 text-green-800 dark:text-green-200 p-4 rounded-lg">
+          <div class="flex items-center">
+            <i class="fas fa-check-circle mr-2"></i>
+            <p>Successfully joined the project! Redirecting to home page...</p>
+          </div>
+        </div>
+        <div x-show="status === 'error'" class="bg-red-50 dark:bg-red-900/50 text-red-800 dark:text-red-200 p-4 rounded-lg">
+          <div class="flex items-center">
+            <i class="fas fa-exclamation-circle mr-2"></i>
+            <p x-text="errorMessage"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Home Button -->
+      <div class="mt-6 text-center">
+        <a href="/" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/50 hover:bg-teal-100 dark:hover:bg-teal-900/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
+          <i class="fas fa-home mr-2"></i>
+          Go to Home
+        </a>
       </div>
     </div>
 
@@ -77,12 +80,12 @@
   <script>
     function inviteState() {
       return {
-        isLoading: false,
+        status: null,
+        errorMessage: '',
         inviter: '{{ inviter }}',
         projectName: '{{ project_name }}',
         projectDescription: '{{ project_description }}',
-        async acceptInvite() {
-          this.isLoading = true;
+        async init() {
           try {
             const response = await fetch('/project/accept', {
               method: 'POST',
@@ -95,14 +98,18 @@
             });
             
             if (response.ok) {
-              // Redirect to home page after successful acceptance
-              window.location.href = '/';
+              this.status = 'success';
+              setTimeout(() => {
+                window.location.href = '/';
+              }, 2000);
             } else {
-              throw new Error('Failed to accept invitation');
+              const data = await response.json();
+              this.status = 'error';
+              this.errorMessage = data.message || 'Failed to accept invitation. Please try again.';
             }
           } catch (error) {
-            alert('Failed to accept invitation. Please try again.');
-            this.isLoading = false;
+            this.status = 'error';
+            this.errorMessage = 'An unexpected error occurred. Please try again.';
           }
         }
       };
