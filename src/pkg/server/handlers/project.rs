@@ -69,7 +69,8 @@ pub async fn invite(
         }
     };
     tracing::info!("inviting {} to {}", &user.name, &project.name);
-    let invite = project.invite(&state, &user.user_id, &me.user_id).await?;
+    let mut txn = state.db_pool.begin().await?;
+    let invite = project.invite(&mut *txn, &user.user_id, &me.user_id).await?;
     invite.details(&state).await?.send(&user.email)?;
     Ok(Json(json!({
         "code": invite.invite_id
@@ -87,8 +88,9 @@ pub async fn accept(
     Query(params): Query<AcceptQuery>,
     Extension(user): Extension<Arc<User>>,
 ) -> Result<Redirect> {
+    let mut txn = state.db_pool.begin().await?;
     let invite = AccessInvite::new(&state, &params.invite_code).await?;
-    invite.accept(&state).await?;
+    invite.accept(&mut *txn).await?;
     tracing::info!("{} accepted invite code - {}", &user.name, &params.invite_code);
     Ok(Redirect::permanent("/"))
 }

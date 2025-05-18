@@ -1,13 +1,10 @@
-use std::sync::Arc;
-
-use crate::{pkg::server::state::AppState, prelude::Result};
-use rand::seq::IndexedRandom;
+use crate::{pkg::{internal::repo::create_new_repo, server::state::AppState}, prelude::Result};
 use serde::Serialize;
-use sqlx::{prelude::{FromRow, Type}, QueryBuilder};
+use sqlx::{prelude::{FromRow, Type}, PgConnection, Postgres, QueryBuilder, Transaction};
 use standard_error::StandardError;
 use uuid::Uuid;
 
-use super::{auth::User, email::invite::ShowInvite};
+use super::{auth::User, email::invite::ShowInvite, repo::{self, delete_repo}};
 
 #[derive(Debug, Type)]
 #[sqlx(type_name = "invite_status", rename_all = "lowercase")]
@@ -17,7 +14,7 @@ pub enum InviteStatus {
     Expired,
 }
 
-#[derive(FromRow, Serialize, Debug)]
+#[derive(FromRow, Serialize, Debug, Clone)]
 pub struct Project {
     pub project_id: String,
     pub name: String,
@@ -35,6 +32,8 @@ pub struct AccessInvite {
 
 impl Project {
     pub async fn create(state: &AppState, name: &str, description: &str, user_id: &str) -> Result<Self> {
+        let mut tx = state.db_pool.begin().await?;
+        let txn = &mut *tx;
         let project = sqlx::query_as!(
             Project,
             r#"
@@ -47,13 +46,36 @@ impl Project {
             description,
             Uuid::new_v4().to_string()
         )
-        .fetch_one(&*state.db_pool)
+        .fetch_one(&mut *txn)
         .await?;
-        let invite = project.invite(state, user_id, user_id).await?;
-        invite.accept(&state).await?;
-        Ok(project)
+   
+        let projclone = project.clone();
+        let invite_result = async move {
+            projclone.invite(txn, &user_id, &user_id).await?;
+            Ok::<(), StandardError>(())
+        };
+  
+        let repo_details = project.clone();
+        let repo_result = async move {
+            create_new_repo(&repo_details.name, &repo_details.description).await?;
+            Ok::<(), StandardError>(())
+        };
+    
+        let (invite_res, repo_res) = tokio::join!(invite_result, repo_result);
+    
+        match (invite_res, repo_res) {
+            (Ok(()), Ok(())) => {
+                tx.commit().await?;
+                Ok(project)
+            }
+            (Err(e), _) | (_, Err(e)) => {
+                tx.rollback().await?;
+                delete_repo(&project.name).await?;
+                Err(e)
+            }
+        }
     }
-
+    
     pub async fn list(state: &AppState, user_id: &str) -> Result<Vec<Self>> {
         let project_ids: Vec<String> = sqlx::query_scalar!(
             "select project_id from project_access where status = $2 and user_id = $1",
@@ -105,7 +127,7 @@ impl Project {
         Ok(())
     }
 
-    pub async fn invite(&self, state: &AppState, user_id: &str, me: &str) -> Result<AccessInvite> {
+    pub async fn invite(&self, txn: &mut PgConnection, user_id: &str, me: &str) -> Result<AccessInvite> {
         let invite = sqlx::query_as!(
             AccessInvite,
             r#"
@@ -120,8 +142,11 @@ impl Project {
             user_id,
             &me
         )
-        .fetch_one(&*state.db_pool)
+        .fetch_one(&mut *txn)
         .await?;
+        if user_id == me{
+            invite.accept(txn).await?;
+        }
         Ok(invite)
     }
 }
@@ -160,7 +185,7 @@ impl AccessInvite {
         })
     }
 
-    pub async fn accept(&self, state: &AppState) -> Result<()> {
+    pub async fn accept(&self, txn: &mut PgConnection) -> Result<()> {
         match sqlx::query_as!(
             Self,
             r#"
@@ -170,7 +195,7 @@ impl AccessInvite {
             &self.invite_id,
             InviteStatus::Accepted as _
         )
-        .fetch_optional(&*state.db_pool)
+        .fetch_optional(txn)
         .await?
         {
             Some(_) => {}
@@ -211,9 +236,7 @@ mod tests {
     async fn test_project_invite_accept() -> Result<()> {
         let state = AppState::new().await?;
         let user = User::create(&state, "ashupednekar49@gmail.com", "Ashu Pednekar").await?;
-        let project = Project::create(&state, "proj", "project description", &user.user_id).await?;
-        let invite = project.invite(&state, &user.user_id, &user.user_id).await?;
-        invite.accept(&state).await?;
+        Project::create(&state, "proj", "project description", &user.user_id).await?;
         Ok(())
     }
 

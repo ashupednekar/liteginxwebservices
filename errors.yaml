@@ -7,3 +7,5 @@ errors:
     detail_en_US: "Invalid code"
   - code: ERR-PROJ-001
     detail_en_US: "Invalid code"
+  - code: ERR-REPO-001
+    detail_en_US: "Error creating repo: [err]"

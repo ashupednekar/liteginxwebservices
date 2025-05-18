@@ -26,18 +26,17 @@ pub fn generate_token(email: &str, username: &str) -> Result<String, String> {
         .ok_or("Failed to calculate token expiration")?
         .timestamp();
 
-    let claims = Claims {
-        sub: email.to_string(),
-        username: username.to_string(),
-        exp: expiration as usize,
-    };
+    let token_payload = format!("{}:{}:{}", email, username, expiration);
 
-    encode(
-        &Header::default(),
-        &claims,
-        &EncodingKey::from_secret(JWT_SECRET.as_bytes()),
-    )
-    .map_err(|e| format!("Failed to generate token: {}", e))
+    let hash = Sha256::digest(token_payload.as_bytes());
+
+    // Convert to numeric-only by taking the decimal digits of the hash bytes
+    let numeric_token = hash
+        .iter()
+        .map(|b| format!("{:03}", b)) // Pad each byte to 3 digits (000–255)
+        .collect::<String>();
+
+    Ok(numeric_token)
 }
 
 pub fn verify_token(token: &str) -> Result<Claims, String> {
