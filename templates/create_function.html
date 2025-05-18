@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Function - LWS</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
+    <style>
+        [x-cloak] { display: none !important; }
+        #editor { 
+            width: 100%;
+            height: calc(100vh - 300px);
+            min-height: 400px;
+        }
+        .monaco-editor {
+            padding-top: 8px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-100 min-h-screen">
+    <div x-data="functionState()" class="min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="bg-white dark:bg-gray-900 shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <div class="flex justify-between items-center">
+                    <h1 class="text-xl font-semibold">Create New Function</h1>
+                    <button @click="saveFunction" 
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
+                            :disabled="!canSave">
+                        <i class="fas fa-save mr-2"></i>
+                        Save Function
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="space-y-6">
+                <!-- Language Selection -->
+                <div class="bg-white dark:bg-gray-900 rounded-lg shadow p-6">
+                    <h2 class="text-lg font-medium mb-4">Select Language</h2>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        <template x-for="lang in languages" :key="lang.id">
+                            <button @click="selectLanguage(lang)"
+                                    class="p-4 rounded-lg border-2 text-center transition-colors"
+                                    :class="selectedLanguage?.id === lang.id ? 
+                                           'border-teal-500 bg-teal-50 dark:bg-teal-900/50' : 
+                                           'border-gray-200 dark:border-gray-700 hover:border-teal-300'">
+                                <i :class="lang.icon" class="text-2xl mb-2"></i>
+                                <div x-text="lang.name" class="font-medium"></div>
+                            </button>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Environment Selection (for JS, Python, Lua) -->
+                <div x-show="showEnvironmentSelection" 
+                     x-transition
+                     class="bg-white dark:bg-gray-900 rounded-lg shadow p-6">
+                    <h2 class="text-lg font-medium mb-4">Environment</h2>
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-4">
+                            <button @click="environmentType = 'select'"
+                                    class="px-4 py-2 rounded-md"
+                                    :class="environmentType === 'select' ? 
+                                           'bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300' : 
+                                           'bg-gray-100 dark:bg-gray-800'">
+                                Select Existing
+                            </button>
+                            <button @click="environmentType = 'create'"
+                                    class="px-4 py-2 rounded-md"
+                                    :class="environmentType === 'create' ? 
+                                           'bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300' : 
+                                           'bg-gray-100 dark:bg-gray-800'">
+                                Create New
+                            </button>
+                        </div>
+
+                        <!-- Existing Environment Selection -->
+                        <div x-show="environmentType === 'select'" class="mt-4">
+                            <select x-model="selectedEnvironment" 
+                                    class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800">
+                                <option value="">Select an environment</option>
+                                <template x-for="env in environments" :key="env.id">
+                                    <option :value="env.id" x-text="env.name"></option>
+                                </template>
+                            </select>
+                        </div>
+
+                        <!-- New Environment Creation -->
+                        <div x-show="environmentType === 'create'" class="mt-4 space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Environment Name</label>
+                                <input type="text" 
+                                       x-model="newEnvironment.name"
+                                       class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Description</label>
+                                <textarea x-model="newEnvironment.description"
+                                          class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800"
+                                          rows="3"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Code Editor -->
+                <div class="bg-white dark:bg-gray-900 rounded-lg shadow">
+                    <div id="editor"></div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Save Modal -->
+        <div x-show="showSaveModal" 
+             x-cloak
+             class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+            <div class="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-lg w-full p-6">
+                <h3 class="text-lg font-medium mb-4">Save Function</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Commit Message</label>
+                        <textarea x-model="commitMessage"
+                                  class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800"
+                                  rows="3"
+                                  placeholder="Describe your changes..."></textarea>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button @click="showSaveModal = false"
+                                class="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md">
+                            Cancel
+                        </button>
+                        <button @click="submitFunction"
+                                class="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700">
+                            Save
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function functionState() {
+            return {
+                languages: [
+                    { id: 'js', name: 'JavaScript', icon: 'fab fa-js', monacoLang: 'javascript' },
+                    { id: 'python', name: 'Python', icon: 'fab fa-python', monacoLang: 'python' },
+                    { id: 'lua', name: 'Lua', icon: 'fas fa-code', monacoLang: 'lua' },
+                    { id: 'go', name: 'Go', icon: 'fas fa-code', monacoLang: 'go' },
+                    { id: 'rust', name: 'Rust', icon: 'fas fa-code', monacoLang: 'rust' }
+                ],
+                selectedLanguage: null,
+                environmentType: 'select',
+                selectedEnvironment: '',
+                newEnvironment: {
+                    name: '',
+                    description: ''
+                },
+                environments: [],
+                editor: null,
+                showSaveModal: false,
+                commitMessage: '',
+                code: '',
+
+                get showEnvironmentSelection() {
+                    return ['js', 'python', 'lua'].includes(this.selectedLanguage?.id);
+                },
+
+                get canSave() {
+                    if (!this.selectedLanguage) return false;
+                    if (this.showEnvironmentSelection) {
+                        if (this.environmentType === 'select' && !this.selectedEnvironment) return false;
+                        if (this.environmentType === 'create' && !this.newEnvironment.name) return false;
+                    }
+                    return true;
+                },
+
+                async init() {
+                    // Initialize Monaco Editor
+                    require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs' }});
+                    require(['vs/editor/editor.main'], () => {
+                        this.editor = monaco.editor.create(document.getElementById('editor'), {
+                            value: '',
+                            language: 'plaintext',
+                            theme: 'vs-dark',
+                            automaticLayout: true,
+                            minimap: { enabled: true },
+                            scrollBeyondLastLine: false,
+                            fontSize: 14,
+                            lineNumbers: 'on',
+                            roundedSelection: false,
+                            scrollbar: {
+                                vertical: 'visible',
+                                horizontal: 'visible'
+                            }
+                        });
+                    });
+
+                    // Load environments if needed
+                    if (this.showEnvironmentSelection) {
+                        await this.loadEnvironments();
+                    }
+                },
+
+                selectLanguage(lang) {
+                    this.selectedLanguage = lang;
+                    if (this.editor) {
+                        monaco.editor.setModelLanguage(this.editor.getModel(), lang.monacoLang);
+                    }
+                },
+
+                async loadEnvironments() {
+                    try {
+                        const response = await fetch('/environments');
+                        if (response.ok) {
+                            this.environments = await response.json();
+                        }
+                    } catch (error) {
+                        console.error('Failed to load environments:', error);
+                    }
+                },
+
+                saveFunction() {
+                    this.code = this.editor.getValue();
+                    this.showSaveModal = true;
+                },
+
+                async submitFunction() {
+                    try {
+                        const headers = {
+                            'Content-Type': 'text/plain',
+                            'X-Function-Language': this.selectedLanguage.id,
+                            'X-Commit-Message': this.commitMessage
+                        };
+
+                        if (this.showEnvironmentSelection) {
+                            if (this.environmentType === 'select') {
+                                headers['X-Environment-Id'] = this.selectedEnvironment;
+                            } else {
+                                headers['X-Environment-Name'] = this.newEnvironment.name;
+                                headers['X-Environment-Description'] = this.newEnvironment.description;
+                            }
+                        }
+
+                        const response = await fetch('/functions', {
+                            method: 'POST',
+                            headers: headers,
+                            body: this.code
+                        });
+
+                        if (response.ok) {
+                            window.location.href = '/functions';
+                        } else {
+                            const error = await response.json();
+                            alert(error.message || 'Failed to save function');
+                        }
+                    } catch (error) {
+                        console.error('Failed to save function:', error);
+                        alert('An unexpected error occurred');
+                    }
+                }
+            };
+        }
+    </script>
+</body>
+</html> 

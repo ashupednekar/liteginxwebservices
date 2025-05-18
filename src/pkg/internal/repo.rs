@@ -1,6 +1,5 @@
 use reqwest::StatusCode;
 use serde::Serialize;
-use standard_error::{Interpolate, StandardError};
 
 use crate::{conf::settings, prelude::Result};
 
@@ -65,13 +64,13 @@ pub async fn delete_repo(name: &str) -> Result<()> {
         .await?;
     match res.status() {
         StatusCode::NO_CONTENT => {
-            println!("✅ Repository deleted successfully.");
+            tracing::info!("✅ Repository deleted successfully.");
         }
         StatusCode::NOT_FOUND => {
-            println!("⚠️ Repository not found.");
+            tracing::info!("⚠️ Repository not found.");
         }
         status => {
-            eprintln!("❌ Failed to delete repo ({}): {}", status, res.text().await?);
+            tracing::error!("❌ Failed to delete repo ({}): {}", status, res.text().await?);
         }
     }
     Ok(())
