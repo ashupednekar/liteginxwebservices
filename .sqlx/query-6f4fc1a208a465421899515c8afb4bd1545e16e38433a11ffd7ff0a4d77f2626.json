@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT token, user_id, code, expiry, status as \"status: _\"\n            FROM tokens\n            WHERE token = $1\n            ",
+  "query": "\n            SELECT token, user_id, code, expiry, status as \"status: _\"\n            FROM tokens\n            WHERE token = $1\n            AND status = $2\n            AND expiry > now()\n            ",
   "describe": {
     "columns": [
       {
@@ -11,7 +11,7 @@
       {
         "ordinal": 1,
         "name": "user_id",
-        "type_info": "Uuid"
+        "type_info": "Varchar"
       },
       {
         "ordinal": 2,
@@ -33,7 +33,8 @@
               "Enum": [
                 "pending",
                 "verified",
-                "expired"
+                "expired",
+                "rejected"
               ]
             }
           }
@@ -42,7 +43,20 @@
     ],
     "parameters": {
       "Left": [
-        "Uuid"
+        "Uuid",
+        {
+          "Custom": {
+            "name": "token_status",
+            "kind": {
+              "Enum": [
+                "pending",
+                "verified",
+                "expired",
+                "rejected"
+              ]
+            }
+          }
+        }
       ]
     },
     "nullable": [
@@ -53,5 +67,5 @@
       false
     ]
   },
-  "hash": "16c7a3f10e51bfaee5be91bf5ada448dc8d1b0e985b4e1cf6e3b75e15332cb19"
+  "hash": "6f4fc1a208a465421899515c8afb4bd1545e16e38433a11ffd7ff0a4d77f2626"
 }

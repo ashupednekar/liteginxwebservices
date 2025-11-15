@@ -5,14 +5,12 @@ use crate::{
     },
     prelude::Result,
 };
-use axum::http::StatusCode;
-use rand::{Rng, distr::Alphanumeric};
+use rand::Rng;
 use sqlx::{
     prelude::{FromRow, Type},
     types::time::OffsetDateTime,
 };
-use standard_error::{StandardError, Status};
-use std::sync::Arc;
+use standard_error::StandardError;
 use uuid::Uuid;
 
 #[derive(Debug, Type)]
@@ -99,13 +97,14 @@ impl User {
 
 impl AuthToken {
     fn generate_code() -> String {
-    //    rand::rng()
-    //        .sample_iter(&Alphanumeric)
-    //        .take(6)
-    //        .map(char::from)
-    //        .collect()
+        //    rand::rng()
+        //        .sample_iter(&Alphanumeric)
+        //        .take(6)
+        //        .map(char::from)
+        //        .collect()
         let mut rng = rand::rng();
-        (0..6).map(|_| rng.random_range(0..10).to_string())
+        (0..6)
+            .map(|_| rng.random_range(0..10).to_string())
             .collect()
     }
 
